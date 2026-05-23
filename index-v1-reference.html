@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kane's Bioresonance Manual</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Nunito+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #f7f4ef;
+      --bg-main: #f2ede5;
+      --surface: #ffffff;
+      --surface-hover: #faf8f4;
+      --surface-active: #eee9df;
+      --border: rgba(139, 111, 71, 0.15);
+      --border-hover: rgba(139, 111, 71, 0.35);
+      --gold: #8b6f47;
+      --gold-dim: rgba(139, 111, 71, 0.15);
+      --gold-glow: rgba(139, 111, 71, 0.06);
+      --cream: #2c2417;
+      --cream-dim: rgba(44, 36, 23, 0.5);
+      --sage: #4a7a4a;
+      --brown: #8b6f47;
+      --beneficial: #3a8a4a;
+      --detrimental: #b83030;
+      --confused: #c49520;
+      --phase-blockages: #9e6b3a;
+      --phase-energy: #b8942e;
+      --phase-strains: #b83030;
+      --phase-emotions: #7b68ae;
+      --phase-physical: #3a8a4a;
+      --phase-detox: #4a7fa0;
+      --phase-acupuncture: #b8942e;
+      --phase-remedies: #8b6f47;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--cream);
+      font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Sacred Geometry Background */
+    .bg-sacred {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-deep) 70%, transparent 100%);
+      padding: 20px 48px 12px;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+
+    .logo-mark {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+    }
+
+    .logo-mark circle {
+      fill: none;
+      stroke: #8b6f47;
+      stroke-width: 0.7;
+      opacity: 0.6;
+    }
+
+    .header-title {
+      flex: 1;
+    }
+
+    .header-title h1 {
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      font-size: 1.6rem;
+      color: var(--gold);
+      letter-spacing: 2px;
+    }
+
+    .header-title p {
+      font-size: 0.75rem;
+      color: var(--cream-dim);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .search-wrapper {
+      position: relative;
+      width: 320px;
+      flex-shrink: 0;
+    }
+
+    .search-wrapper input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--cream);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .search-wrapper input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 20px var(--gold-glow);
+    }
+
+    .search-wrapper input::placeholder { color: var(--cream-dim); }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--cream-dim);
+      font-size: 0.9rem;
+    }
+
+    /* Phase Navigation */
+    .phase-nav {
+      display: flex;
+      gap: 4px;
+      padding: 0 48px 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      position: sticky;
+      top: 90px;
+      z-index: 49;
+      background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-deep) 80%, transparent 100%);
+      padding-bottom: 24px;
+    }
+
+    .phase-nav::-webkit-scrollbar { display: none; }
+
+    .phase-btn {
+      padding: 8px 20px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: transparent;
+      color: var(--cream-dim);
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.3s;
+    }
+
+    .phase-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--cream);
+      background: var(--surface);
+    }
+
+    .phase-btn.active {
+      background: var(--gold-dim);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .phase-btn .phase-num {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+      text-align: center;
+      border-radius: 50%;
+      background: var(--gold-dim);
+      font-size: 0.65rem;
+      margin-right: 6px;
+      font-family: 'Nunito Sans', sans-serif;
+    }
+
+    .phase-btn.active .phase-num {
+      background: var(--gold);
+      color: var(--bg-deep);
+    }
+
+    /* Mode Toggle */
+    .mode-bar {
+      display: flex;
+      gap: 8px;
+      padding: 0 48px 20px;
+      align-items: center;
+    }
+
+    .mode-label {
+      font-size: 0.7rem;
+      color: var(--cream-dim);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-right: 8px;
+    }
+
+    .mode-btn {
+      padding: 5px 14px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--cream-dim);
+      font-family: inherit;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .mode-btn:hover { border-color: var(--border-hover); color: var(--cream); }
+    .mode-btn.active { background: var(--surface-active); border-color: var(--sage); color: var(--sage); }
+
+    /* Main Content */
+    main {
+      position: relative;
+      z-index: 1;
+      padding-bottom: 100px;
+    }
+
+    /* Row Section */
+    .row-section {
+      margin-bottom: 36px;
+    }
+
+    .row-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 48px;
+      margin-bottom: 14px;
+    }
+
+    .row-phase-bar {
+      width: 4px;
+      height: 24px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .row-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--cream);
+      letter-spacing: 1px;
+    }
+
+    .row-count {
+      font-size: 0.7rem;
+      color: var(--cream-dim);
+      margin-left: 4px;
+    }
+
+    .row-subtitle {
+      font-size: 0.75rem;
+      color: var(--cream-dim);
+      font-style: italic;
+    }
+
+    /* Netflix Horizontal Scroll */
+    .row-scroll {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      gap: 14px;
+      padding: 8px 48px 16px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .row-scroll::-webkit-scrollbar { display: none; }
+
+    /* Cards */
+    .card {
+      min-width: 230px;
+      max-width: 230px;
+      height: 160px;
+      background: var(--surface);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      scroll-snap-align: start;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .card:hover {
+      transform: scale(1.08);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+      border-color: var(--border-hover);
+      z-index: 10;
+    }
+
+    .card-accent {
+      height: 3px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .card-body {
+      padding: 14px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-badges {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .badge-testing { background: rgba(107, 143, 107, 0.2); color: var(--sage); }
+    .badge-asking { background: rgba(123, 104, 174, 0.2); color: #9b88ce; }
+    .badge-beneficial { background: rgba(74, 158, 92, 0.15); color: var(--beneficial); }
+    .badge-detrimental { background: rgba(196, 64, 64, 0.15); color: var(--detrimental); }
+    .badge-confused { background: rgba(212, 168, 67, 0.15); color: var(--confused); }
+    .badge-critical { background: rgba(201, 168, 76, 0.2); color: var(--gold); border: 1px solid var(--gold-dim); }
+
+    .card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--cream);
+      margin-bottom: 4px;
+      line-height: 1.2;
+    }
+
+    .card-sub {
+      font-size: 0.72rem;
+      color: var(--cream-dim);
+      margin-top: auto;
+    }
+
+    .card-vial {
+      font-size: 0.65rem;
+      color: var(--sage);
+      margin-top: 4px;
+      opacity: 0.7;
+    }
+
+    /* Detail Panel */
+    .detail-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.25);
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .detail-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .detail-panel {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(180deg, #ffffff 0%, #faf8f4 100%);
+      border-top: 2px solid var(--gold-dim);
+      max-height: 80vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+      padding: 0;
+    }
+
+    .detail-panel.active {
+      transform: translateY(0);
+    }
+
+    .detail-header {
+      position: sticky;
+      top: 0;
+      background: linear-gradient(180deg, #ffffff 0%, #ffffff 90%, transparent 100%);
+      padding: 24px 48px 16px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      z-index: 2;
+    }
+
+    .detail-header h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      color: var(--gold);
+      letter-spacing: 1px;
+    }
+
+    .detail-header .detail-sub {
+      font-size: 0.8rem;
+      color: var(--cream-dim);
+      margin-top: 4px;
+    }
+
+    .detail-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--cream);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .detail-close:hover {
+      background: var(--surface-hover);
+      border-color: var(--gold);
+    }
+
+    .detail-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 48px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .detail-tab {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      color: var(--cream-dim);
+      font-family: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .detail-tab:hover { color: var(--cream); }
+    .detail-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .detail-content {
+      padding: 0 48px 40px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .detail-section {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .detail-section h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: var(--gold);
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+
+    .detail-section p, .detail-section li {
+      font-size: 0.85rem;
+      color: var(--cream);
+      line-height: 1.7;
+    }
+
+    .detail-section ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .detail-section ul li {
+      padding: 4px 0;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .detail-section ul li::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--gold);
+      position: absolute;
+      left: 0;
+      top: 12px;
+    }
+
+    .detail-full {
+      grid-column: 1 / -1;
+    }
+
+    /* Acu Point Cards */
+    .acu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .acu-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .acu-card:hover {
+      border-color: var(--gold);
+      background: var(--surface-hover);
+    }
+
+    .acu-code {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .acu-name {
+      font-size: 0.75rem;
+      color: var(--cream-dim);
+      font-style: italic;
+      margin-top: 2px;
+    }
+
+    .acu-meridian {
+      font-size: 0.65rem;
+      color: var(--sage);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+
+    .acu-location {
+      font-size: 0.75rem;
+      color: var(--cream);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* Status Flow Indicator */
+    .flow-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 48px;
+      margin-bottom: 32px;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      font-size: 0.7rem;
+      color: var(--cream-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .flow-step:hover { color: var(--cream); }
+
+    .flow-step.active {
+      color: var(--gold);
+    }
+
+    .flow-step .flow-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+
+    .flow-step.active .flow-num {
+      border-color: var(--gold);
+      background: var(--gold-dim);
+      color: var(--gold);
+    }
+
+    .flow-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      min-width: 20px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 48px;
+      color: var(--cream-dim);
+    }
+
+    .empty-state h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    /* Search results mode */
+    .search-results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 14px;
+      padding: 0 48px;
+    }
+
+    .search-results .card {
+      min-width: unset;
+      max-width: unset;
+    }
+
+    /* Section Divider */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 48px 8px;
+      margin-top: 16px;
+    }
+
+    .section-divider span {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      color: var(--cream-dim);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .section-divider::before,
+    .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header { padding: 16px 20px 8px; }
+      .header-top { flex-wrap: wrap; }
+      .search-wrapper { width: 100%; order: 3; }
+      .phase-nav { padding: 0 20px 20px; }
+      .row-header { padding: 0 20px; }
+      .row-scroll { padding: 8px 20px 16px; gap: 10px; }
+      .card { min-width: 180px; max-width: 180px; height: 150px; }
+      .detail-header { padding: 20px 20px 12px; }
+      .detail-tabs { padding: 0 20px; }
+      .detail-content { padding: 0 20px 32px; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .flow-indicator { padding: 0 20px; overflow-x: auto; }
+      .mode-bar { padding: 0 20px 16px; }
+      .section-divider { padding: 24px 20px 8px; }
+      .search-results { padding: 0 20px; }
+    }
+
+    /* Scrollbar */
+    .detail-panel::-webkit-scrollbar { width: 6px; }
+    .detail-panel::-webkit-scrollbar-track { background: transparent; }
+    .detail-panel::-webkit-scrollbar-thumb { background: rgba(139,111,71,0.3); border-radius: 3px; }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .row-section {
+      animation: fadeInUp 0.5s ease both;
+    }
+
+    .row-section:nth-child(2) { animation-delay: 0.1s; }
+    .row-section:nth-child(3) { animation-delay: 0.2s; }
+    .row-section:nth-child(4) { animation-delay: 0.3s; }
+    .row-section:nth-child(5) { animation-delay: 0.4s; }
+    .row-section:nth-child(6) { animation-delay: 0.5s; }
+  </style>
+</head>
+<body>
+
+  <!-- Sacred Geometry Background -->
+  <svg class="bg-sacred" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <defs>
+      <pattern id="seedOfLife" x="0" y="0" width="120" height="104" patternUnits="userSpaceOnUse">
+        <circle cx="60" cy="52" r="25" fill="none" stroke="rgba(139,111,71,0.07)" stroke-width="0.5"/>
+        <circle cx="60" cy="27" r="25" fill="none" stroke="rgba(139,111,71,0.07)" stroke-width="0.5"/>
+        <circle cx="81.65" cy="39.5" r="25" fill="none" stroke="rgba(139,111,71,0.07)" stroke-width="0.5"/>
+        <circle cx="81.65" cy="64.5" r="25" fill="none" stroke="rgba(139,111,71,0.07)" stroke-width="0.5"/>
+        <circle cx="60" cy="77" r="25" fill="none" stroke="rgba(139,111,71,0.07)" stroke-width="0.5"/>
+        <circle cx="38.35" cy="64.5" r="25" fill="none" stroke="rgba(139,111,71,0.07)" stroke-width="0.5"/>
+        <circle cx="38.35" cy="39.5" r="25" fill="none" stroke="rgba(139,111,71,0.07)" stroke-width="0.5"/>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#seedOfLife)"/>
+  </svg>
+
+  <!-- App -->
+  <div id="app">
+    <header>
+      <div class="header-top">
+        <!-- Seed of Life Logo -->
+        <svg class="logo-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="20"/>
+          <circle cx="50" cy="30" r="20"/>
+          <circle cx="67.3" cy="40" r="20"/>
+          <circle cx="67.3" cy="60" r="20"/>
+          <circle cx="50" cy="70" r="20"/>
+          <circle cx="32.7" cy="60" r="20"/>
+          <circle cx="32.7" cy="40" r="20"/>
+        </svg>
+        <div class="header-title">
+          <h1>Bioresonance Manual</h1>
+          <p>Clinical Protocol & Reference</p>
+        </div>
+        <div class="search-wrapper">
+          <span class="search-icon">&#9906;</span>
+          <input type="search" id="searchInput" placeholder="Search strains, points, remedies..." autocomplete="off">
+        </div>
+      </div>
+    </header>
+
+    <!-- Protocol Flow -->
+    <div class="flow-indicator" id="flowIndicator"></div>
+
+    <!-- Phase Navigation -->
+    <nav class="phase-nav" id="phaseNav"></nav>
+
+    <!-- Mode Toggle -->
+    <div class="mode-bar">
+      <span class="mode-label">Mode</span>
+      <button class="mode-btn active" data-mode="all">All</button>
+      <button class="mode-btn" data-mode="testing">Testing</button>
+      <button class="mode-btn" data-mode="asking">Asking</button>
+    </div>
+
+    <!-- Main Content -->
+    <main id="main"></main>
+  </div>
+
+  <!-- Detail Overlay -->
+  <div class="detail-overlay" id="detailOverlay"></div>
+
+  <!-- Detail Panel -->
+  <div class="detail-panel" id="detailPanel">
+    <div id="detailContent"></div>
+  </div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const PHASES = [
+  { id: 'blockages', name: 'Blockages', order: 1, color: 'var(--phase-blockages)',
+    desc: 'Clear what blocks the body from communicating clearly. Must be addressed FIRST.' },
+  { id: 'energy', name: 'Energy Stabilisation', order: 2, color: 'var(--phase-energy)',
+    desc: 'Stabilise the body so testing is accurate. Hydration, polarity, spin.' },
+  { id: 'strains', name: 'Strains', order: 3, color: 'var(--phase-strains)',
+    desc: 'Everything detrimental - metals, candida, parasites, chemicals, EMF, the whole shebang.' },
+  { id: 'emotions', name: 'Emotions & Energy', order: 4, color: 'var(--phase-emotions)',
+    desc: 'Emotional holding patterns, chakra blockages, meridian energy disruptions.' },
+  { id: 'physical', name: 'Physical Support', order: 5, color: 'var(--phase-physical)',
+    desc: 'Organ support, nutritional needs, structural support - knowing what the body needs.' },
+  { id: 'detox', name: 'Detox', order: 6, color: 'var(--phase-detox)',
+    desc: 'Drainage pathways and elimination. ALWAYS last - never mobilise before drainage is open.' }
+];
+
+const ITEMS = [
+  // === BLOCKAGES ===
+  { id: 'geo-stress', name: 'Geopathic Stress', phase: 'blockages', sub: 'Environmental',
+    desc: 'Earth energy disturbance from underground water veins, fault lines, Hartmann and Curry grid crossings. Can prevent the body from responding accurately to any testing.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Use geopathic stress vial from the Environmental Set. Place on the body and test for resonance. The body will show stress response if geopathic interference is present.',
+    ask: 'Ask the body directly: "Is there geopathic stress interference blocking communication?" Muscle test for yes/no. Follow up: "Is this from the sleeping environment? Workplace?"',
+    balance: 'Run geopathic stress clearing program on the bioresonance device. Support with grounding exercises. Recommend geopathic stress assessment of sleeping area.',
+    vial: 'Environmental Set - Box 1', points: ['KI1','GV20','SP6','LR3','ST36','CV4'],
+    remedies: [], notes: '' },
+
+  { id: 'scar-interference', name: 'Scar Interference Fields', phase: 'blockages', sub: 'Scar Tissue',
+    desc: 'Scars create energetic interference fields that block meridian flow. C-section, appendectomy, any surgical scar, piercings, and tattoos can all create blockages.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Test each known scar site with the scar interference vial. Also test systematically along major meridian pathways for hidden interference.',
+    ask: 'Ask: "Is there a scar interference field blocking energy flow?" Then ask which area: "Abdomen? Chest? Spine? Limbs?"',
+    balance: 'Run scar interference program. Apply treatment directly over the scar site. May need multiple sessions for deep surgical scars.',
+    vial: 'Blockage Set - Scars', points: ['LU7','SI3','LI4','LR3','SP21'],
+    remedies: [], notes: 'C-section scars are extremely common and often missed. Always check.' },
+
+  { id: 'dental-interference', name: 'Dental Interference', phase: 'blockages', sub: 'Dental',
+    desc: 'Amalgam fillings, root canals, cavitations, wisdom tooth extraction sites, and jaw misalignment all create powerful interference fields that can disrupt the entire body.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Use dental interference vial set. Test each quadrant of the jaw. Cross-reference with the Voll dental chart to identify which meridian each tooth affects.',
+    ask: 'Ask: "Is there dental interference affecting the body?" Follow up with quadrant testing - upper left, upper right, lower left, lower right.',
+    balance: 'Run dental interference clearing program. Note: this clears the energetic interference but does not replace dental work. Refer for dental assessment if significant.',
+    vial: 'Blockage Set - Dental', points: ['ST6','ST7','SI19','SJ17','LI4','CV24','GV26'],
+    remedies: [], notes: 'Each tooth sits on a specific meridian per the Voll dental chart. Amalgams are a double hit - interference field PLUS mercury.' },
+
+  { id: 'emf-blockage', name: 'EMF / Electrosmog', phase: 'blockages', sub: 'Environmental',
+    desc: 'Electromagnetic field interference from WiFi, mobile phones, smart meters, power lines, Bluetooth. Accumulates over time and disrupts the body\'s own electromagnetic communication.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Use EMF/electrosmog vial. Test for body\'s accumulated electromagnetic load. Also test specific frequencies if available (WiFi, 5G, power frequency).',
+    ask: 'Ask: "Is electromagnetic interference affecting this body\'s ability to communicate?" Follow up: "Is the primary source in the home? Workplace? Carried on person?"',
+    balance: 'Run electrosmog clearing program. Recommend reducing exposure - phone on airplane mode at night, WiFi router off while sleeping, earthing practices.',
+    vial: 'Environmental Set - Box 1', points: ['GV20','PC6','SJ5','KI1','LR3','GB20'],
+    remedies: [], notes: '' },
+
+  { id: 'vaccination-residue', name: 'Vaccination Residue', phase: 'blockages', sub: 'Toxin Residue',
+    desc: 'Residual energetic signatures from vaccinations can create interference patterns. Not about the vaccine itself being harmful - about the body still holding the energetic imprint and being unable to process it.',
+    modes: ['testing', 'asking'], states: ['detrimental', 'confused'],
+    test: 'Use vaccination nosode vials. Test each relevant vaccination type. The body may show confused resonance - seeing it as both beneficial AND detrimental simultaneously.',
+    ask: 'Ask: "Is there vaccination residue creating an interference pattern?" If yes: "Does the body see this as detrimental or is it confused about it?"',
+    balance: 'Run vaccination clearing program. This helps the body process the energetic residue. If the body was confused, balance first, then retest to confirm the body can now read clearly.',
+    vial: 'Nosode Set - Vaccinations', points: ['LI4','LI11','ST36','SP6'],
+    remedies: [], notes: 'Classic example of the body being CONFUSED - seeing something as both good and bad. Balance confusion FIRST.' },
+
+  // === ENERGY STABILISATION ===
+  { id: 'hydration', name: 'Hydration Balance', phase: 'energy', sub: 'Foundational',
+    desc: 'The body must be adequately hydrated for bioresonance frequencies to transmit properly. A dehydrated body cannot hold or respond to frequencies accurately.',
+    modes: ['testing'], states: ['beneficial', 'detrimental'],
+    test: 'Test hydration vial. If dehydrated, the body will show stress response. Have the client drink water and retest after 2-3 minutes.',
+    ask: '',
+    balance: 'Client drinks water during session. Retest. If still showing dehydration, test for deeper fluid metabolism issues (kidney, adrenal, mineral balance).',
+    vial: 'Stabilisation Set', points: ['KI7','SP9','CV9','BL22','SJ4'],
+    remedies: [], notes: 'ALWAYS check hydration first. Nothing else works if the body can\'t conduct the frequencies.' },
+
+  { id: 'polarity', name: 'Polarity Correction', phase: 'energy', sub: 'Foundational',
+    desc: 'The body has a natural electromagnetic polarity (like a battery - positive and negative poles). When reversed, the body reads everything backwards - beneficial substances test as detrimental and vice versa.',
+    modes: ['testing'], states: ['confused'],
+    test: 'Test polarity using the polarity correction vial or the device\'s built-in polarity test. A reversed polarity will flip ALL subsequent test results.',
+    ask: '',
+    balance: 'Run polarity correction program. This is essentially the body getting CONFUSED at a fundamental level - it literally cannot tell good from bad when polarity is reversed.',
+    vial: 'Stabilisation Set', points: ['GV20','KI1','BL62','KI6','SI3','LU7'],
+    remedies: [], notes: 'If polarity is reversed, NOTHING you test after this point is reliable until it\'s corrected. This is the #1 cause of confused readings.' },
+
+  { id: 'spin', name: 'Spin Correction', phase: 'energy', sub: 'Foundational',
+    desc: 'The body\'s energy field has a natural rotational direction. Incorrect spin (like polarity reversal) produces unreliable testing results. Related to the three Dan Tian energy centres.',
+    modes: ['testing'], states: ['confused'],
+    test: 'Test spin correction vial. Some devices have specific spin testing programs. An incorrect spin often presents as inconsistent or fluctuating test results.',
+    ask: '',
+    balance: 'Run spin correction program. Address the three Dan Tian points (CV4 lower, CV17 middle, GV24/Yin Tang upper) to realign the body\'s energy field rotation.',
+    vial: 'Stabilisation Set', points: ['GV20','KI1','CV4','CV17','GV24','LI4','LR3'],
+    remedies: [], notes: '' },
+
+  { id: 'acid-alkaline', name: 'Acid-Alkaline Balance', phase: 'energy', sub: 'Foundational',
+    desc: 'The body\'s pH balance affects its ability to respond to frequencies. An overly acidic terrain favours pathogen growth and reduces treatment effectiveness.',
+    modes: ['testing'], states: ['beneficial', 'detrimental'],
+    test: 'Test acid-alkaline balance vial. The body will indicate whether its terrain is too acidic, too alkaline, or balanced.',
+    ask: '',
+    balance: 'Run pH balancing program. Dietary recommendations - alkaline foods, reduce sugar, processed food, excess protein. Mineral supplementation may be needed.',
+    vial: 'Stabilisation Set', points: ['ST36','SP3','CV12','BL20'],
+    remedies: [], notes: '' },
+
+  // === STRAINS ===
+  { id: 'roundworm', name: 'Roundworm (Ascaris)', phase: 'strains', sub: 'Parasites',
+    desc: 'One of the most common intestinal parasites worldwide. Can migrate through lungs, liver, and intestines. Often shows up in bioresonance testing even when conventional tests are negative.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Use Ascaris vial from the parasite set. Test for resonance. If positive, also test for lifecycle stages (eggs, larvae, adult).',
+    ask: 'Ask: "Are there parasites present?" If yes: "Roundworm specifically?" Then ask about location: "Intestines? Liver? Lungs?"',
+    balance: 'Run parasite clearing programs. Start gentle - parasites release toxins when dying (Herxheimer reaction). ALWAYS ensure drainage pathways are open before aggressive parasite protocols.',
+    vial: 'Parasite Set - Box 3', points: ['ST25','ST36','ST37','SP6','SP9','CV12','LR13'],
+    remedies: [], notes: 'Parasite die-off can cause temporary worsening. Go slow. Drainage MUST be open.' },
+
+  { id: 'tapeworm', name: 'Tapeworm (Cestoda)', phase: 'strains', sub: 'Parasites',
+    desc: 'Segmented parasites that attach to the intestinal wall. Can grow very long. Often associated with nutritional deficiency despite adequate food intake.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Use tapeworm vial from the parasite set. Test for resonance across the abdominal area.',
+    ask: 'Ask the body about parasitic presence. "Is there a tapeworm-type organism present?"',
+    balance: 'Run tapeworm-specific clearing programs. Full moon protocols can be effective (parasites are more active during full moon cycles).',
+    vial: 'Parasite Set - Box 3', points: ['ST25','ST36','SP6','CV12'],
+    remedies: [], notes: '' },
+
+  { id: 'mercury', name: 'Mercury', phase: 'strains', sub: 'Heavy Metals',
+    desc: 'Highly toxic heavy metal. Sources include amalgam fillings, some fish, industrial exposure. Accumulates in brain, kidneys, and nervous system. One of the most important metals to test for.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Use mercury vial from the heavy metal set. Test for resonance. Also test for methyl mercury (organic form) separately if available.',
+    ask: 'Ask: "Is mercury affecting this body?" Follow up: "Is the source dental? Dietary? Environmental?" This helps determine removal strategy.',
+    balance: 'Run mercury clearing program. CRITICAL: ensure drainage is fully open before mobilising mercury. Liver, kidney, and bowel pathways must all be functioning.',
+    vial: 'Heavy Metal Set - Box 2', points: ['LR3','LI4','BL18','BL23','KI3','SP6','GB39','BL17'],
+    remedies: [], notes: 'Mercury detox must be SLOW. Mobilising too fast can redistribute mercury to worse locations. Always check dental status - no point detoxing while amalgams still present.' },
+
+  { id: 'lead', name: 'Lead', phase: 'strains', sub: 'Heavy Metals',
+    desc: 'Accumulates in bones and soft tissue. Sources include old paint, contaminated water, industrial exposure. Affects nervous system, kidneys, and reproductive system.',
+    modes: ['testing'], states: ['detrimental'],
+    test: 'Use lead vial from the heavy metal set. Test for resonance. Lead often hides in bones - may need deeper testing.',
+    ask: '',
+    balance: 'Run lead clearing program. Support with calcium, zinc, and iron which compete with lead for absorption sites.',
+    vial: 'Heavy Metal Set - Box 2', points: ['LR3','LI4','BL23','KI3','SP6','GB39'],
+    remedies: [], notes: '' },
+
+  { id: 'candida', name: 'Candida Albicans', phase: 'strains', sub: 'Fungal',
+    desc: 'Yeast overgrowth in the gut and throughout the body. Thrives in damp, acidic, sugar-rich environments. A weak Spleen (in TCM terms) is the root cause - dampness accumulates.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Use Candida Albicans vial from the fungal set. Test for resonance. Also test for other Candida species if available.',
+    ask: 'Ask: "Is there fungal overgrowth present?" Then: "Is the primary location gut? Systemic? Skin?"',
+    balance: 'Run candida clearing programs. Address the ROOT cause - strengthen Spleen, resolve dampness, reduce sugar. Without addressing terrain, candida always returns.',
+    vial: 'Fungal Set - Box 4', points: ['SP3','SP9','ST40','ST36','CV12','LI11','BL20'],
+    remedies: [], notes: 'Candida is a SYMPTOM of terrain imbalance, not just an infection. Treat the terrain (Spleen/dampness) or it comes right back.' },
+
+  { id: 'aspergillus', name: 'Aspergillus (Mold)', phase: 'strains', sub: 'Fungal',
+    desc: 'Environmental mold that can colonise the body, especially lungs and sinuses. Common in damp buildings. Can produce mycotoxins that are highly toxic.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Use Aspergillus vial from the fungal set. Test for resonance, particularly over lung and sinus areas.',
+    ask: 'Ask: "Is there mold exposure affecting this body?" Follow up about location of exposure: home, work, previous residence.',
+    balance: 'Run mold clearing programs. Address environmental exposure - no point treating if the client goes home to a moldy house.',
+    vial: 'Fungal Set - Box 4', points: ['LU9','LU1','BL13','LI20','LI4'],
+    remedies: [], notes: '' },
+
+  { id: 'borrelia', name: 'Borrelia (Lyme)', phase: 'strains', sub: 'Bacteria',
+    desc: 'Spirochete bacteria transmitted by ticks. Causes Lyme disease. Known for evading the immune system and creating chronic, complex illness patterns. Often co-infects with other organisms.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Use Borrelia vial from the bacteria set. Test for resonance. ALSO test for common co-infections: Bartonella, Babesia, Ehrlichia, Mycoplasma.',
+    ask: 'Ask: "Is there a spirochete-type infection present?" Then ask about co-infections and biofilm presence.',
+    balance: 'Run Borrelia clearing programs. This is often a long-term protocol. Address biofilms, co-infections, and immune support simultaneously.',
+    vial: 'Bacteria Set - Box 5', points: ['LI4','LI11','ST36','SP6','BL18','BL23'],
+    remedies: [], notes: 'Lyme is rarely alone - always check for co-infections. Biofilm is a major factor in chronic Lyme.' },
+
+  { id: 'hpylori', name: 'Helicobacter Pylori', phase: 'strains', sub: 'Bacteria',
+    desc: 'Stomach bacteria linked to ulcers and gastritis. Very common - over half the world population carries it. Can affect stomach acid production and nutrient absorption.',
+    modes: ['testing'], states: ['detrimental'],
+    test: 'Use H. Pylori vial. Test over the stomach area specifically.',
+    ask: '',
+    balance: 'Run H. Pylori clearing program. Support stomach acid production and gut lining repair. Mastic gum and specific herbs can support.',
+    vial: 'Bacteria Set - Box 5', points: ['CV12','ST36','ST25','BL21','SP3'],
+    remedies: [], notes: '' },
+
+  { id: 'ebv', name: 'Epstein-Barr Virus (EBV)', phase: 'strains', sub: 'Viruses',
+    desc: 'Herpes family virus that causes glandular fever/mono. Can reactivate and contribute to chronic fatigue, thyroid issues, and autoimmune patterns. Most people carry it dormant.',
+    modes: ['testing', 'asking'], states: ['detrimental', 'confused'],
+    test: 'Use EBV vial from the virus set. Test for active vs dormant. The body may show confused resonance - it has learned to coexist with the virus but it\'s still causing issues.',
+    ask: 'Ask: "Is there a viral load contributing to fatigue/symptoms?" Then: "Is EBV active or reactivating?"',
+    balance: 'Run EBV clearing programs. Support immune function - especially if the body is confused about the virus (seeing it as part of itself).',
+    vial: 'Virus Set - Box 6', points: ['LI4','LI11','ST36','SP6','BL23','LU9'],
+    remedies: [], notes: 'EBV is a classic CONFUSION case. The body often can\'t decide if it\'s self or invader because it\'s been there so long.' },
+
+  { id: 'glyphosate', name: 'Glyphosate', phase: 'strains', sub: 'Chemicals',
+    desc: 'Active ingredient in Roundup herbicide. Present in most non-organic food. Disrupts gut bacteria, mineral absorption, and detoxification pathways. Extremely common exposure.',
+    modes: ['testing'], states: ['detrimental'],
+    test: 'Use glyphosate vial from the chemical set. Test for body burden. Almost everyone shows some level of exposure.',
+    ask: '',
+    balance: 'Run chemical clearing programs for glyphosate. Support gut restoration and mineral replenishment. Recommend organic food sources.',
+    vial: 'Chemical Set - Box 7', points: ['LR3','LR14','BL18','LI4','LI11','ST36'],
+    remedies: [], notes: '' },
+
+  { id: 'emf-strain', name: 'EMF Radiation Damage', phase: 'strains', sub: 'Radiation',
+    desc: 'Accumulated cellular damage from chronic EMF exposure. Different from EMF as a blockage - this is about the body holding the strain pattern from ongoing exposure.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Use EMF strain vials (different from the blockage vials). Test for cellular stress patterns from radiation.',
+    ask: 'Ask: "Is there radiation damage the body is holding?" Then: "Is this from current ongoing exposure or a past event?"',
+    balance: 'Run EMF strain clearing programs. Support cellular repair. Antioxidant support is important here.',
+    vial: 'Radiation Set - Box 7', points: ['PC6','PC8','GV20','HT7','KI1','GB20','SJ5'],
+    remedies: [], notes: '' },
+
+  // === EMOTIONS & ENERGY ===
+  { id: 'grief', name: 'Grief / Sadness', phase: 'emotions', sub: 'Five Element Emotions',
+    desc: 'Metal element emotion. Grief held in the Lung and Large Intestine meridians. Manifests as chest tightness, shallow breathing, constipation, skin issues, inability to let go.',
+    modes: ['testing', 'asking'], states: ['detrimental', 'confused'],
+    test: 'Test emotional frequency vials for grief/sadness. Also test Lung meridian directly. The body may show grief as both detrimental AND beneficial (the body needs to grieve but is stuck).',
+    ask: 'Ask: "Is there unresolved grief affecting this body?" Then: "Is this recent or longstanding?" And: "Does the body need help processing or releasing?"',
+    balance: 'Run grief/Metal element emotional program. Acupuncture on chest-opening points. Create safe space for emotional release. The body knows how to grieve - sometimes it just needs permission.',
+    vial: 'Emotional Set', points: ['LU1','LU7','LI4','BL13'],
+    remedies: [], notes: 'Grief is the emotion most commonly held in the body. Check EVERYONE for this.' },
+
+  { id: 'fear', name: 'Fear / Deep Anxiety', phase: 'emotions', sub: 'Five Element Emotions',
+    desc: 'Water element emotion. Fear held in the Kidney and Bladder meridians. Manifests as low back pain, urinary issues, bone weakness, existential dread, freeze response.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Test emotional vials for fear/anxiety. Test Kidney meridian. Deep constitutional fear often shows as Kidney weakness on meridian testing.',
+    ask: 'Ask: "Is there fear stored in this body?" Then: "Is this survival fear or learned anxiety?" And: "Where is it held - lower back? Kidneys? Bladder?"',
+    balance: 'Run fear/Water element emotional program. Ground through KI1. Strengthen the Kidney energy which gives courage and willpower.',
+    vial: 'Emotional Set', points: ['KI1','KI3','BL23','CV4'],
+    remedies: [], notes: '' },
+
+  { id: 'anger', name: 'Anger / Frustration', phase: 'emotions', sub: 'Five Element Emotions',
+    desc: 'Wood element emotion. Anger held in the Liver and Gallbladder meridians. Manifests as headaches, jaw tension, eye problems, menstrual issues, explosive outbursts or suppressed resentment.',
+    modes: ['testing', 'asking'], states: ['detrimental', 'confused'],
+    test: 'Test emotional vials for anger/frustration. Test Liver meridian. Suppressed anger often shows as Liver Qi stagnation - the body is confused about whether the anger serves it.',
+    ask: 'Ask: "Is there anger or frustration being held?" Then: "Is this directed anger or generalised frustration?" And: "Does the body want to express it or is it protecting itself by holding it?"',
+    balance: 'Run anger/Wood element program. LR3 to move stagnant Liver Qi. The body may need to express before it can release - anger is energy that wants to move.',
+    vial: 'Emotional Set', points: ['LR2','LR3','LR14','GB34'],
+    remedies: [], notes: 'Suppressed anger is one of the most common patterns in clinic. The body gets CONFUSED - it sees the anger as both protective (beneficial) and harmful (detrimental).' },
+
+  { id: 'worry', name: 'Worry / Overthinking', phase: 'emotions', sub: 'Five Element Emotions',
+    desc: 'Earth element emotion. Worry held in the Spleen and Stomach meridians. Manifests as digestive issues, poor appetite, fatigue, loose stools, obsessive thinking loops.',
+    modes: ['testing', 'asking'], states: ['detrimental'],
+    test: 'Test emotional vials for worry/overthinking. Test Spleen meridian. Chronic worry weakens the Spleen which weakens digestion which increases worry - a cycle.',
+    ask: 'Ask: "Is worry or overthinking affecting this body?" Then: "Is this creating digestive symptoms?"',
+    balance: 'Run worry/Earth element program. Strengthen Spleen energy to break the worry-digestion cycle. Grounding practices help.',
+    vial: 'Emotional Set', points: ['SP3','SP6','ST36','CV12'],
+    remedies: [], notes: '' },
+
+  { id: 'heart-chakra', name: 'Heart Chakra Blockage', phase: 'emotions', sub: 'Chakra System',
+    desc: 'Anahata - the centre of love, compassion, connection, and self-acceptance. Blockage manifests as emotional guardedness, grief, inability to give or receive love, chest tightness.',
+    modes: ['asking'], states: ['detrimental'],
+    test: '',
+    ask: 'Ask: "Is the heart centre blocked or restricted?" Then: "Is this a protection pattern or a wound?" And: "Is the body ready to open here or does it need more safety first?"',
+    balance: 'Run heart chakra balancing program. Use CV17 (Shan Zhong) - the Hui-Meeting point of Qi and the heart chakra point. This is gentle work - never force the heart open.',
+    vial: 'Chakra Set', points: ['CV17','PC6','HT7','LU1','BL15'],
+    remedies: [], notes: 'The heart chakra is the bridge between lower (physical) and upper (spiritual) chakras. When this is blocked, nothing flows properly.' },
+
+  { id: 'solar-plexus', name: 'Solar Plexus Blockage', phase: 'emotions', sub: 'Chakra System',
+    desc: 'Manipura - the centre of personal power, will, confidence, and self-worth. Blockage manifests as digestive issues, power struggles, people-pleasing, lack of boundaries.',
+    modes: ['asking'], states: ['detrimental'],
+    test: '',
+    ask: 'Ask: "Is the solar plexus centre weak or blocked?" Then: "Is this about self-worth, boundaries, or power?" And: "What does this body need to feel empowered?"',
+    balance: 'Run solar plexus balancing program. CV12 and the Earth element points strengthen the centre of personal power.',
+    vial: 'Chakra Set', points: ['CV12','ST36','SP3','LR13'],
+    remedies: [], notes: '' },
+
+  // === PHYSICAL SUPPORT ===
+  { id: 'liver-support', name: 'Liver Support', phase: 'physical', sub: 'Organ Support',
+    desc: 'The body\'s primary detoxification organ. Processes chemicals, hormones, medications, alcohol. Also governs smooth flow of Qi and emotions (Wood element). If the Liver is struggling, everything backs up.',
+    modes: ['testing', 'asking'], states: ['beneficial'],
+    test: 'Test Liver meridian strength. Test for Liver support substances - which supplements, herbs, or remedies the Liver resonates with as BENEFICIAL.',
+    ask: 'Ask: "Does the Liver need support?" Then: "What type - detoxification support, Qi flow support, or Blood nourishing?"',
+    balance: 'Run Liver support programs. Test for beneficial substances - milk thistle, dandelion root, B vitamins. These should test as BENEFICIAL to confirm the body wants them.',
+    vial: 'Organ Support Set', points: ['LR3','LR14','BL18','GB24','BL19','GB34'],
+    remedies: ['Milk Thistle', 'Dandelion Root', 'B-Complex'], notes: '' },
+
+  { id: 'kidney-adrenal', name: 'Kidney / Adrenal Support', phase: 'physical', sub: 'Organ Support',
+    desc: 'Constitutional energy (Jing). Governs willpower, bone health, reproduction, and the body\'s deepest energy reserves. Adrenals sit on top of the kidneys - burnout pattern.',
+    modes: ['testing', 'asking'], states: ['beneficial'],
+    test: 'Test Kidney meridian strength. Test adrenal stress vials. Test for beneficial support substances.',
+    ask: 'Ask: "Are the Kidneys depleted?" Then: "Is this constitutional (lifelong pattern) or acquired (recent burnout)?"',
+    balance: 'Run Kidney tonification programs. Rest is medicine for Kidney depletion. Test for beneficial support - ashwagandha, rehmannia, mineral support.',
+    vial: 'Organ Support Set', points: ['KI3','BL23','CV4','GV4','KI7'],
+    remedies: ['Ashwagandha', 'Rehmannia', 'Magnesium'], notes: 'Kidney energy can\'t be rushed - it rebuilds slowly. Rest and nourishment, not stimulation.' },
+
+  { id: 'digestive-support', name: 'Digestive Support', phase: 'physical', sub: 'Organ Support',
+    desc: 'Spleen and Stomach - the Earth element. Governs transformation and transportation of food into energy. A weak digestive system means the body can\'t process ANYTHING properly - food, frequencies, or emotions.',
+    modes: ['testing', 'asking'], states: ['beneficial'],
+    test: 'Test Spleen and Stomach meridians. Test digestive enzyme levels, stomach acid balance, intestinal flora.',
+    ask: 'Ask: "Does the digestive system need support?" Then: "Is this about processing (Spleen) or receiving (Stomach)?"',
+    balance: 'Run digestive support programs. Test for beneficial enzymes, probiotics, or herbs. Dietary guidance is essential here.',
+    vial: 'Organ Support Set', points: ['ST36','SP3','CV12','BL20','BL21','LR13'],
+    remedies: ['Probiotics', 'Digestive Enzymes', 'Slippery Elm'], notes: '' },
+
+  { id: 'lung-immune', name: 'Lung / Immune Support', phase: 'physical', sub: 'Organ Support',
+    desc: 'Metal element. Lung governs Wei Qi (defensive energy / immune system) and the skin. Weak Lung energy means frequent colds, allergies, skin issues, and poor boundaries.',
+    modes: ['testing', 'asking'], states: ['beneficial'],
+    test: 'Test Lung meridian strength. Test immune function vials. Test for beneficial immune support substances.',
+    ask: 'Ask: "Does the immune system need strengthening?" Then: "Is this deficiency (catching everything) or excess (overreacting/allergies)?"',
+    balance: 'Run immune support programs. Different approach for deficiency vs excess. Test for beneficial support - astragalus for deficiency, quercetin for excess.',
+    vial: 'Organ Support Set', points: ['LU9','LU1','BL13','LI4','ST36'],
+    remedies: ['Astragalus', 'Vitamin C', 'Zinc'], notes: '' },
+
+  { id: 'lymphatic-support', name: 'Lymphatic Support', phase: 'physical', sub: 'System Support',
+    desc: 'The body\'s waste removal highway. No pump of its own - relies on movement, muscle contraction, and breathing. Sluggish lymph = toxins accumulate = everything gets worse.',
+    modes: ['testing'], states: ['beneficial'],
+    test: 'Test lymphatic flow vials. Test for congestion patterns. Areas of puffiness or fluid retention indicate lymphatic stagnation.',
+    ask: '',
+    balance: 'Run lymphatic drainage programs. Dry brushing, rebounding, deep breathing all support. The lymph system MUST be moving before any detox protocol.',
+    vial: 'System Support Set', points: ['SP6','SP9','CV12','ST40','SP3','SJ5'],
+    remedies: ['Cleavers', 'Red Clover', 'Dry Brushing'], notes: '' },
+
+  // === DETOX ===
+  { id: 'bowel-drainage', name: 'Bowel Drainage', phase: 'detox', sub: 'Drainage Pathways',
+    desc: 'THE most important drainage pathway. If the bowel is not moving, DO NOT proceed with any detox protocol. Toxins mobilised with nowhere to go cause a healing crisis.',
+    modes: ['testing', 'asking'], states: ['beneficial'],
+    test: 'Test bowel function. Check for constipation patterns, sluggish motility, gut flora imbalance. LI4 - the Great Eliminator - should test as beneficial.',
+    ask: 'Ask: "Is the bowel drainage pathway open?" If no: "What is blocking it? Structural? Neurological? Dietary?"',
+    balance: 'Run bowel drainage programs. LI4 MUST be open. Test for beneficial support - magnesium, fibre, probiotics. Client should be having at least one well-formed bowel movement daily.',
+    vial: 'Detox Set', points: ['LI4','ST25','BL25','SJ6','ST37','SP15'],
+    remedies: ['Magnesium Citrate', 'Psyllium Husk', 'Triphala'], notes: 'Rule #1 of detox: if the bowel isn\'t moving, STOP. Fix this first.' },
+
+  { id: 'urinary-drainage', name: 'Urinary Drainage', phase: 'detox', sub: 'Drainage Pathways',
+    desc: 'Second most important pathway. Water-soluble toxins exit via urine. Kidney function must be adequate, fluid intake sufficient, and urinary tract clear.',
+    modes: ['testing'], states: ['beneficial'],
+    test: 'Test urinary function. Check kidney filtering capacity. Test bladder meridian.',
+    ask: '',
+    balance: 'Run urinary drainage programs. Ensure adequate water intake. Support kidney function. SP9 resolves dampness that can block urinary flow.',
+    vial: 'Detox Set', points: ['CV3','BL28','SP9','KI7','BL22','CV9'],
+    remedies: ['Dandelion Leaf', 'Nettle Tea'], notes: '' },
+
+  { id: 'skin-drainage', name: 'Skin / Sweat Drainage', phase: 'detox', sub: 'Drainage Pathways',
+    desc: 'The skin is the body\'s largest organ and the "third kidney." Sweating eliminates heavy metals and chemicals through the skin. Important for chemical and heavy metal detox.',
+    modes: ['testing'], states: ['beneficial'],
+    test: 'Test skin function and sweating capacity. Some clients don\'t sweat properly - this pathway is blocked.',
+    ask: '',
+    balance: 'Run skin drainage programs. LI4 promotes sweating. Infrared sauna, exercise, hot baths all support this pathway.',
+    vial: 'Detox Set', points: ['LI4','LU7','BL13','LI11','LU5','BL12'],
+    remedies: ['Infrared Sauna', 'Epsom Salt Baths'], notes: '' },
+
+  { id: 'lymph-drainage', name: 'Lymphatic Drainage', phase: 'detox', sub: 'Drainage Pathways',
+    desc: 'Lymphatic system transports waste for processing. Must be moving freely. Stagnant lymph traps toxins in tissue and creates chronic inflammation patterns.',
+    modes: ['testing'], states: ['beneficial'],
+    test: 'Test lymphatic drainage capacity. Check for signs of lymph congestion - swollen nodes, fluid retention, puffiness.',
+    ask: '',
+    balance: 'Run lymphatic drainage programs. Movement is essential - the lymph has no pump. Dry brushing, rebounding, breathing exercises. SP6 and SP9 together are the lymphatic drainage pair.',
+    vial: 'Detox Set', points: ['SP6','SP9','CV12','ST40','SP3','SJ5'],
+    remedies: ['Dry Brushing', 'Rebounding', 'Deep Breathing'], notes: '' },
+
+  { id: 'liver-bile-drainage', name: 'Liver / Bile Drainage', phase: 'detox', sub: 'Drainage Pathways',
+    desc: 'Fat-soluble toxins are processed by the Liver, conjugated with bile, and excreted through the gallbladder into the intestines. This pathway handles chemicals, hormones, and heavy metals.',
+    modes: ['testing', 'asking'], states: ['beneficial'],
+    test: 'Test Liver and Gallbladder function for detox capacity. Test bile flow. LR3 should test as beneficial for liver Qi flow.',
+    ask: 'Ask: "Is the liver detox pathway open and functioning?" If no: "Is the blockage at the liver processing level or the bile excretion level?"',
+    balance: 'Run liver/bile drainage programs. LR3 ensures smooth Qi flow through the liver. GB34 promotes bile secretion. Support with bitter herbs, lemon water, castor oil packs.',
+    vial: 'Detox Set', points: ['LR3','LR14','GB24','BL18','BL19','GB34'],
+    remedies: ['Milk Thistle', 'Artichoke Extract', 'Castor Oil Packs'], notes: 'The Four Gates (LI4 + LR3 bilateral) is the MASTER combination for opening all drainage simultaneously.' }
+];
+
+const ACU_POINTS = [
+  { code: 'ST36', name: 'Zu San Li', english: 'Leg Three Miles', meridian: 'Stomach', element: 'Earth',
+    location: '3 cun below the lateral eye of the knee, one finger-breadth lateral to the anterior crest of the tibia',
+    phases: ['energy','physical','detox'], importance: 'critical',
+    use: 'THE master tonification point. Use in EVERY bioresonance session. Strengthens the body\'s overall vitality and ability to respond to treatment. Tonifies Qi, Blood, Yin, and Yang.' },
+
+  { code: 'LI4', name: 'He Gu', english: 'Union Valley', meridian: 'Large Intestine', element: 'Metal',
+    location: 'On the dorsum of the hand, between the 1st and 2nd metacarpal bones, at the midpoint of the 2nd metacarpal on the radial side',
+    phases: ['blockages','detox','strains'], importance: 'critical',
+    use: 'THE Great Eliminator. Primary point for opening elimination pathways. Opens bowel, promotes sweating, moves stagnation. Paired with LR3 creates the "Four Gates" - opens ALL channels.' },
+
+  { code: 'LR3', name: 'Tai Chong', english: 'Great Surge', meridian: 'Liver', element: 'Wood',
+    location: 'On the dorsum of the foot, in the depression distal to the junction of the 1st and 2nd metatarsal bones',
+    phases: ['detox','blockages','emotions','strains'], importance: 'critical',
+    use: 'Yuan-Source of Liver. Ensures smooth flow of Liver Qi - which means smooth flow of ALL Qi. Combined with LI4 creates "Four Gates." MUST be used in detox to ensure liver can process mobilised toxins.' },
+
+  { code: 'SP6', name: 'San Yin Jiao', english: 'Three Yin Intersection', meridian: 'Spleen', element: 'Earth',
+    location: '3 cun above the medial malleolus, on the posterior border of the tibia',
+    phases: ['energy','emotions','physical','strains'], importance: 'critical',
+    use: 'WHERE THREE YIN MERIDIANS CROSS (Spleen, Liver, Kidney). Most versatile Yin-tonification point. Balances all three Yin organs simultaneously. Profoundly calming for emotional work.' },
+
+  { code: 'KI1', name: 'Yong Quan', english: 'Gushing Spring', meridian: 'Kidney', element: 'Water',
+    location: 'On the sole of the foot, in the depression when foot is plantarflexed, at the junction of the anterior one-third and posterior two-thirds of the sole',
+    phases: ['energy','blockages'], importance: 'critical',
+    use: 'THE grounding point. Only point on the sole. When bioresonance shows polarity reversal, spin issues, or geopathic stress, KI1 grounds the body\'s energy back to earth.' },
+
+  { code: 'PC6', name: 'Nei Guan', english: 'Inner Pass', meridian: 'Pericardium', element: 'Fire',
+    location: '2 cun above the wrist crease, between the tendons of palmaris longus and flexor carpi radialis',
+    phases: ['emotions','blockages','strains'], importance: 'critical',
+    use: 'Master emotional regulation point. Confluent of Yin Wei Mai. Regulates chest, Heart, and Stomach. Primary point for nausea (including treatment reactions) and anxiety. Stabilises clients during emotional release.' },
+
+  { code: 'HT7', name: 'Shen Men', english: 'Spirit Gate', meridian: 'Heart', element: 'Fire',
+    location: 'At the wrist crease, in the depression on the radial side of the tendon of flexor carpi ulnaris (ulnar side of wrist)',
+    phases: ['emotions','energy'], importance: 'critical',
+    use: 'THE master calming point. Named "Spirit Gate" - opens the gate for spirit to settle. First point for anxiety, insomnia, emotional overwhelm, or nervous system dysregulation.' },
+
+  { code: 'GV20', name: 'Bai Hui', english: 'Hundred Convergences', meridian: 'Du Mai', element: 'Yang',
+    location: 'On the midline of the head, at the vertex - intersection of a line connecting the ear apices',
+    phases: ['emotions','energy','blockages'], importance: 'critical',
+    use: 'Crown chakra point. Where all Yang energy converges. Raises all Yang energy, opens crown, clears the mind. Discharges accumulated EMF from the brain. Polarity reset point.' },
+
+  { code: 'CV4', name: 'Guan Yuan', english: 'Gate of Origin', meridian: 'Ren Mai', element: 'Yin',
+    location: '3 cun below the umbilicus, on the anterior midline',
+    phases: ['energy','emotions','physical'], importance: 'critical',
+    use: 'THE Lower Dan Tian - the body\'s deepest energy reserve. Gate of Origin = gate to original vitality. When everything tests weak, this accesses constitutional energy. Sacral chakra point.' },
+
+  { code: 'CV17', name: 'Shan Zhong', english: 'Chest Centre', meridian: 'Ren Mai', element: 'Yin',
+    location: 'On the anterior midline, level with the 4th intercostal space, between the nipples',
+    phases: ['emotions','blockages','physical'], importance: 'critical',
+    use: 'Hui-Meeting of Qi AND Front-Mu of Pericardium. THE Heart chakra point. Governs gathering and distribution of all Qi in the chest. Opens the chest for emotional release.' },
+
+  { code: 'BL23', name: 'Shen Shu', english: 'Kidney Shu', meridian: 'Bladder', element: 'Water',
+    location: '1.5 cun lateral to the lower border of the spinous process of L2',
+    phases: ['physical','energy','detox'], importance: 'important',
+    use: 'Back-Shu of Kidney. Most used Back-Shu point. When bioresonance shows deep exhaustion or adrenal patterns, this is essential. Directly accesses Kidney organ energy.' },
+
+  { code: 'BL18', name: 'Gan Shu', english: 'Liver Shu', meridian: 'Bladder', element: 'Water',
+    location: '1.5 cun lateral to the lower border of the spinous process of T9',
+    phases: ['physical','strains'], importance: 'important',
+    use: 'Back-Shu of Liver. When bioresonance shows Liver meridian strain from chemicals, medications, or toxins, this accesses the Liver organ directly from the back.' },
+
+  { code: 'SP9', name: 'Yin Ling Quan', english: 'Yin Mound Spring', meridian: 'Spleen', element: 'Earth',
+    location: 'On the medial side of the leg, in the depression below the medial condyle of the tibia',
+    phases: ['detox','strains'], importance: 'important',
+    use: 'THE primary point for resolving dampness. When bioresonance detects fluid retention, lymphatic congestion, or damp-toxin accumulation, this opens water drainage pathways. Critical in detox phase.' },
+
+  { code: 'GB20', name: 'Feng Chi', english: 'Wind Pool', meridian: 'Gallbladder', element: 'Wood',
+    location: 'In the depression between the sternocleidomastoid and trapezius muscles, level with GV16',
+    phases: ['blockages','strains'], importance: 'important',
+    use: 'Primary point for clearing wind from head and neck. Wind in TCM = sudden-onset, changeable symptoms - maps to environmental/geopathic stress. Clears head, brightens eyes, resolves neck tension.' },
+
+  { code: 'LU7', name: 'Lie Que', english: 'Broken Sequence', meridian: 'Lung', element: 'Metal',
+    location: '1.5 cun above the wrist crease, proximal to the styloid process of the radius',
+    phases: ['blockages'], importance: 'important',
+    use: 'Confluent of Ren Mai. CRITICAL for scar interference - scars on the anterior body disrupt the Ren channel. LU7 opens the Ren to restore flow across scars. Also opens throat for suppressed communication.' },
+
+  { code: 'KI3', name: 'Tai Xi', english: 'Great Ravine', meridian: 'Kidney', element: 'Water',
+    location: 'In the depression between the medial malleolus and the Achilles tendon',
+    phases: ['physical','energy'], importance: 'important',
+    use: 'Yuan-Source of Kidney. Primary Kidney tonification point. When Water element is the primary weakness, start here. Restores constitutional energy.' },
+
+  { code: 'LI11', name: 'Qu Chi', english: 'Pool at the Crook', meridian: 'Large Intestine', element: 'Metal',
+    location: 'At the lateral end of the cubital crease when elbow is flexed',
+    phases: ['strains','detox'], importance: 'important',
+    use: 'Clears heat from the blood, regulates immune function. When bioresonance detects overactive immune responses (allergies, autoimmune, histamine), this modulates. Major point for skin-manifesting toxicity.' },
+
+  { code: 'SP3', name: 'Tai Bai', english: 'Supreme White', meridian: 'Spleen', element: 'Earth',
+    location: 'Proximal to the 1st metatarsophalangeal joint, at the junction of red and white skin',
+    phases: ['energy','physical','strains'], importance: 'important',
+    use: 'Yuan-Source of Spleen. Primary point to strengthen transformation and transportation. When Earth element is weak, this restores processing ability. Without this, treatment frequencies can\'t be properly integrated.' },
+
+  { code: 'SI3', name: 'Hou Xi', english: 'Back Ravine', meridian: 'Small Intestine', element: 'Fire',
+    location: 'On the ulnar end of the distal palmar crease when a loose fist is made',
+    phases: ['blockages','energy'], importance: 'important',
+    use: 'Confluent of Du Mai. Opens the entire posterior midline. When bioresonance detects spinal blockages, dorsal scar interference, or Du Mai obstruction, this is the primary access point.' },
+
+  { code: 'GV4', name: 'Ming Men', english: 'Gate of Life', meridian: 'Du Mai', element: 'Yang',
+    location: 'Below the spinous process of L2, on the posterior midline',
+    phases: ['energy','physical'], importance: 'important',
+    use: 'Source of Kidney Yang (constitutional fire/warmth). When bioresonance shows deep Yang deficiency - cold body, weak metabolism, exhaustion, depleted adrenals - this reignites the constitutional fire.' }
+];
+
+const REMEDIES_CATEGORIES = [
+  { id: 'herbal', name: 'Herbal Remedies', desc: 'Plant-based medicines tested for individual resonance', items: ['Milk Thistle', 'Dandelion Root', 'Ashwagandha', 'Astragalus', 'Echinacea', 'Cleavers', 'Red Clover', 'Slippery Elm', 'Mastic Gum'] },
+  { id: 'homeopathic', name: 'Homeopathic Remedies', desc: 'Potentised remedies tested for resonance match', items: ['Nux Vomica', 'Arsenicum Album', 'Sulphur', 'Lycopodium', 'Phosphorus'] },
+  { id: 'nutritional', name: 'Nutritional Supplements', desc: 'Vitamins, minerals, and nutritional support', items: ['Magnesium', 'Zinc', 'Vitamin C', 'B-Complex', 'Vitamin D3', 'Probiotics', 'Digestive Enzymes', 'Iron'] },
+  { id: 'essential-oils', name: 'Essential Oils', desc: 'Therapeutic-grade oils tested for resonance', items: ['Frankincense', 'Lavender', 'Tea Tree', 'Peppermint', 'Oregano'] },
+  { id: 'flower-essences', name: 'Flower Essences', desc: 'Bach and Australian Bush Flower essences for emotional support', items: ['Rescue Remedy', 'Star of Bethlehem', 'Walnut', 'Mimulus', 'White Chestnut'] }
+];
+
+
+// ============================================================
+// APP STATE & LOGIC
+// ============================================================
+const state = {
+  phase: 'all',
+  mode: 'all',
+  search: '',
+  selectedItem: null,
+  selectedPoint: null,
+  detailTab: 'overview'
+};
+
+function getPhaseColor(phaseId) {
+  const p = PHASES.find(ph => ph.id === phaseId);
+  return p ? p.color : 'var(--gold)';
+}
+
+function filterItems() {
+  let items = [...ITEMS];
+  if (state.phase !== 'all') items = items.filter(i => i.phase === state.phase);
+  if (state.mode !== 'all') items = items.filter(i => i.modes.includes(state.mode));
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    items = items.filter(i =>
+      i.name.toLowerCase().includes(q) ||
+      i.desc.toLowerCase().includes(q) ||
+      i.sub.toLowerCase().includes(q) ||
+      (i.notes && i.notes.toLowerCase().includes(q)) ||
+      i.points.some(p => p.toLowerCase().includes(q))
+    );
+  }
+  return items;
+}
+
+function filterPoints() {
+  if (!state.search) return ACU_POINTS;
+  const q = state.search.toLowerCase();
+  return ACU_POINTS.filter(p =>
+    p.code.toLowerCase().includes(q) ||
+    p.name.toLowerCase().includes(q) ||
+    p.english.toLowerCase().includes(q) ||
+    p.meridian.toLowerCase().includes(q) ||
+    p.use.toLowerCase().includes(q)
+  );
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderFlowIndicator() {
+  const el = document.getElementById('flowIndicator');
+  el.innerHTML = PHASES.map((p, i) => `
+    <div class="flow-step ${state.phase === p.id ? 'active' : ''}" onclick="setPhase('${p.id}')">
+      <span class="flow-num">${p.order}</span>
+      <span>${p.name}</span>
+    </div>
+    ${i < PHASES.length - 1 ? '<div class="flow-line"></div>' : ''}
+  `).join('');
+}
+
+function renderPhaseNav() {
+  const el = document.getElementById('phaseNav');
+  el.innerHTML = `
+    <button class="phase-btn ${state.phase === 'all' ? 'active' : ''}" onclick="setPhase('all')">All</button>
+    ${PHASES.map(p => `
+      <button class="phase-btn ${state.phase === p.id ? 'active' : ''}" onclick="setPhase('${p.id}')">
+        <span class="phase-num">${p.order}</span>${p.name}
+      </button>
+    `).join('')}
+    <button class="phase-btn ${state.phase === 'acupuncture' ? 'active' : ''}" onclick="setPhase('acupuncture')" style="border-color: var(--gold-dim)">
+      Acupuncture
+    </button>
+    <button class="phase-btn ${state.phase === 'remedies' ? 'active' : ''}" onclick="setPhase('remedies')" style="border-color: var(--brown)">
+      Remedies
+    </button>
+  `;
+}
+
+function renderMain() {
+  const main = document.getElementById('main');
+
+  if (state.phase === 'acupuncture') {
+    renderAcupuncturePage(main);
+    return;
+  }
+
+  if (state.phase === 'remedies') {
+    renderRemediesPage(main);
+    return;
+  }
+
+  const items = filterItems();
+
+  if (state.search) {
+    // Search results mode - flat grid
+    const points = filterPoints();
+    main.innerHTML = `
+      <div style="padding: 0 48px 16px;">
+        <p style="color: var(--cream-dim); font-size: 0.85rem;">
+          Found ${items.length} item${items.length !== 1 ? 's' : ''}${points.length ? ` and ${points.length} acupuncture point${points.length !== 1 ? 's' : ''}` : ''} for "<em>${state.search}</em>"
+        </p>
+      </div>
+      <div class="search-results">
+        ${items.map(item => renderCard(item)).join('')}
+      </div>
+      ${points.length ? `
+        <div class="section-divider"><span>Acupuncture Points</span></div>
+        <div style="padding: 0 48px;">
+          <div class="acu-grid">
+            ${points.map(p => renderAcuCard(p)).join('')}
+          </div>
+        </div>
+      ` : ''}
+    `;
+    return;
+  }
+
+  // Group items by phase, then subcategory
+  const grouped = {};
+  items.forEach(item => {
+    const key = `${item.phase}|${item.sub}`;
+    if (!grouped[key]) grouped[key] = { phase: item.phase, sub: item.sub, items: [] };
+    grouped[key].items.push(item);
+  });
+
+  const rows = Object.values(grouped).sort((a, b) => {
+    const pa = PHASES.findIndex(p => p.id === a.phase);
+    const pb = PHASES.findIndex(p => p.id === b.phase);
+    return pa - pb || a.sub.localeCompare(b.sub);
+  });
+
+  let html = '';
+  let lastPhase = '';
+
+  rows.forEach(row => {
+    const phase = PHASES.find(p => p.id === row.phase);
+    if (row.phase !== lastPhase && state.phase === 'all') {
+      html += `
+        <div class="section-divider">
+          <span>${phase.order}. ${phase.name}</span>
+        </div>
+        <p style="padding: 0 48px; font-size: 0.8rem; color: var(--cream-dim); margin-bottom: 8px; font-style: italic;">${phase.desc}</p>
+      `;
+      lastPhase = row.phase;
+    }
+
+    html += `
+      <div class="row-section">
+        <div class="row-header">
+          <div class="row-phase-bar" style="background: ${phase.color}"></div>
+          <span class="row-title">${row.sub}</span>
+          <span class="row-count">(${row.items.length})</span>
+        </div>
+        <div class="row-scroll">
+          ${row.items.map(item => renderCard(item)).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  // Add acupuncture reference section when showing all
+  if (state.phase === 'all') {
+    html += `
+      <div class="section-divider"><span>Key Acupuncture Points</span></div>
+      <p style="padding: 0 48px; font-size: 0.8rem; color: var(--cream-dim); margin-bottom: 16px; font-style: italic;">Points that support each bioresonance protocol phase</p>
+      <div style="padding: 0 48px;">
+        <div class="acu-grid">
+          ${ACU_POINTS.filter(p => p.importance === 'critical').map(p => renderAcuCard(p)).join('')}
+        </div>
+      </div>
+    `;
+
+    html += `
+      <div class="section-divider"><span>Remedy Categories</span></div>
+      <p style="padding: 0 48px; font-size: 0.8rem; color: var(--cream-dim); margin-bottom: 16px; font-style: italic;">Substances tested for beneficial resonance to support the body</p>
+      <div class="row-section">
+        <div class="row-scroll">
+          ${REMEDIES_CATEGORIES.map(cat => `
+            <div class="card" style="min-width: 260px; max-width: 260px; height: 180px;" onclick="setPhase('remedies')">
+              <div class="card-accent" style="background: var(--brown)"></div>
+              <div class="card-body">
+                <h3 class="card-title">${cat.name}</h3>
+                <p class="card-sub" style="margin-top: 8px;">${cat.desc}</p>
+                <p class="card-vial">${cat.items.length} items</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  if (!rows.length) {
+    html = `
+      <div class="empty-state">
+        <h3>No items found</h3>
+        <p>Try adjusting your filters or search terms.</p>
+      </div>
+    `;
+  }
+
+  main.innerHTML = html;
+}
+
+function renderCard(item) {
+  const phase = PHASES.find(p => p.id === item.phase);
+  return `
+    <div class="card" onclick="showDetail('${item.id}')">
+      <div class="card-accent" style="background: ${phase.color}"></div>
+      <div class="card-body">
+        <div class="card-badges">
+          ${item.modes.includes('testing') ? '<span class="badge badge-testing">Testing</span>' : ''}
+          ${item.modes.includes('asking') ? '<span class="badge badge-asking">Asking</span>' : ''}
+        </div>
+        <h3 class="card-title">${item.name}</h3>
+        <p class="card-sub">${item.sub} ${item.states.includes('confused') ? ' - Body may be confused' : ''}</p>
+        ${item.vial ? `<p class="card-vial">${item.vial}</p>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderAcuCard(point) {
+  return `
+    <div class="acu-card" onclick="showPointDetail('${point.code}')">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <div class="acu-code">${point.code}</div>
+          <div class="acu-name">${point.name} - ${point.english}</div>
+        </div>
+        ${point.importance === 'critical' ? '<span class="badge badge-critical">Key Point</span>' : ''}
+      </div>
+      <div class="acu-meridian">${point.meridian} - ${point.element}</div>
+    </div>
+  `;
+}
+
+function renderAcupuncturePage(main) {
+  const points = filterPoints();
+  const byMeridian = {};
+  points.forEach(p => {
+    if (!byMeridian[p.meridian]) byMeridian[p.meridian] = [];
+    byMeridian[p.meridian].push(p);
+  });
+
+  main.innerHTML = `
+    <div style="padding: 0 48px 16px;">
+      <h2 style="font-family: 'Cinzel', serif; color: var(--gold); margin-bottom: 8px;">Acupuncture Points Reference</h2>
+      <p style="color: var(--cream-dim); font-size: 0.85rem;">Key points that complement bioresonance therapy, organised by meridian. Click any point for full detail.</p>
+    </div>
+    ${Object.entries(byMeridian).map(([meridian, pts]) => `
+      <div class="row-section">
+        <div class="row-header">
+          <div class="row-phase-bar" style="background: var(--gold)"></div>
+          <span class="row-title">${meridian} Meridian</span>
+          <span class="row-count">(${pts.length})</span>
+        </div>
+        <div style="padding: 0 48px;">
+          <div class="acu-grid">
+            ${pts.map(p => renderAcuCard(p)).join('')}
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderRemediesPage(main) {
+  main.innerHTML = `
+    <div style="padding: 0 48px 16px;">
+      <h2 style="font-family: 'Cinzel', serif; color: var(--gold); margin-bottom: 8px;">Remedy Catalog</h2>
+      <p style="color: var(--cream-dim); font-size: 0.85rem;">Substances tested for beneficial resonance. This section will grow as we photograph and catalog every vial.</p>
+    </div>
+    ${REMEDIES_CATEGORIES.map(cat => `
+      <div class="row-section">
+        <div class="row-header">
+          <div class="row-phase-bar" style="background: var(--brown)"></div>
+          <span class="row-title">${cat.name}</span>
+          <span class="row-count">(${cat.items.length})</span>
+        </div>
+        <div class="row-scroll">
+          ${cat.items.map(item => `
+            <div class="card" style="min-width: 200px; max-width: 200px; height: 120px;">
+              <div class="card-accent" style="background: var(--brown)"></div>
+              <div class="card-body">
+                <div class="card-badges"><span class="badge badge-testing">Test for Resonance</span></div>
+                <h3 class="card-title">${item}</h3>
+                <p class="card-sub">${cat.name}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+    <div style="padding: 24px 48px; text-align: center; color: var(--cream-dim); font-style: italic;">
+      More remedies will be added as we catalog the vial collection.<br>
+      Each remedy will include: what it supports, dosage, contraindications, and which test items it cross-references.
+    </div>
+  `;
+}
+
+// ============================================================
+// DETAIL PANEL
+// ============================================================
+function showDetail(itemId) {
+  const item = ITEMS.find(i => i.id === itemId);
+  if (!item) return;
+  state.selectedItem = item;
+  state.detailTab = 'overview';
+  renderDetail();
+  document.getElementById('detailPanel').classList.add('active');
+  document.getElementById('detailOverlay').classList.add('active');
+}
+
+function showPointDetail(code) {
+  const point = ACU_POINTS.find(p => p.code === code);
+  if (!point) return;
+  state.selectedPoint = point;
+  state.selectedItem = null;
+
+  const relatedItems = ITEMS.filter(i => i.points.includes(code));
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-header">
+      <div>
+        <h2>${point.code} - ${point.name}</h2>
+        <div class="detail-sub">${point.english} | ${point.meridian} Meridian | ${point.element} Element</div>
+      </div>
+      <button class="detail-close" onclick="hideDetail()">&times;</button>
+    </div>
+    <div class="detail-content">
+      <div class="detail-grid">
+        <div class="detail-section">
+          <h3>Location</h3>
+          <p>${point.location}</p>
+        </div>
+        <div class="detail-section">
+          <h3>Importance</h3>
+          <p>${point.importance === 'critical' ? 'CRITICAL - use frequently in clinic' : 'Important supporting point'}</p>
+          <div style="margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap;">
+            ${point.phases.map(ph => {
+              const phase = PHASES.find(p => p.id === ph);
+              return phase ? `<span class="badge" style="background: ${phase.color}22; color: ${phase.color}; border: 1px solid ${phase.color}44;">${phase.name}</span>` : '';
+            }).join('')}
+          </div>
+        </div>
+        <div class="detail-section detail-full">
+          <h3>Bioresonance Application</h3>
+          <p>${point.use}</p>
+        </div>
+        ${relatedItems.length ? `
+          <div class="detail-section detail-full">
+            <h3>Used In These Protocols</h3>
+            <ul>
+              ${relatedItems.map(i => `<li><strong>${i.name}</strong> (${i.sub}) - ${PHASES.find(p => p.id === i.phase).name}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('detailPanel').classList.add('active');
+  document.getElementById('detailOverlay').classList.add('active');
+}
+
+function renderDetail() {
+  const item = state.selectedItem;
+  if (!item) return;
+
+  const phase = PHASES.find(p => p.id === item.phase);
+  const relatedPoints = ACU_POINTS.filter(p => item.points.includes(p.code));
+  const tab = state.detailTab;
+
+  let tabContent = '';
+
+  if (tab === 'overview') {
+    tabContent = `
+      <div class="detail-grid">
+        <div class="detail-section detail-full">
+          <h3>Description</h3>
+          <p>${item.desc}</p>
+        </div>
+        <div class="detail-section">
+          <h3>Resonance States</h3>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+            ${item.states.map(s => `<span class="badge badge-${s}">${s}</span>`).join('')}
+          </div>
+          ${item.states.includes('confused') ? '<p style="font-size: 0.8rem; color: var(--confused);">The body may get confused about this - seeing beneficial as detrimental or vice versa. ASK the body and BALANCE if needed.</p>' : ''}
+        </div>
+        <div class="detail-section">
+          <h3>Vial Location</h3>
+          <p>${item.vial || 'Location to be added'}</p>
+        </div>
+        ${item.notes ? `
+          <div class="detail-section detail-full" style="border-color: var(--gold-dim); background: rgba(201, 168, 76, 0.05);">
+            <h3>Kelly's Notes</h3>
+            <p style="font-style: italic;">${item.notes}</p>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  } else if (tab === 'testing') {
+    tabContent = `
+      <div class="detail-grid">
+        ${item.test ? `
+          <div class="detail-section detail-full">
+            <h3>How to Test</h3>
+            <p>${item.test}</p>
+          </div>
+        ` : '<div class="detail-section detail-full"><h3>Testing</h3><p>This item is primarily tested through direct body questioning (Asking mode).</p></div>'}
+      </div>
+    `;
+  } else if (tab === 'asking') {
+    tabContent = `
+      <div class="detail-grid">
+        ${item.ask ? `
+          <div class="detail-section detail-full">
+            <h3>How to Ask the Body</h3>
+            <p>${item.ask}</p>
+          </div>
+        ` : '<div class="detail-section detail-full"><h3>Asking</h3><p>This item is primarily tested through vial/device resonance testing (Testing mode).</p></div>'}
+      </div>
+    `;
+  } else if (tab === 'balance') {
+    tabContent = `
+      <div class="detail-grid">
+        <div class="detail-section detail-full">
+          <h3>How to Balance</h3>
+          <p>${item.balance || 'Balance method to be added.'}</p>
+        </div>
+        ${item.remedies && item.remedies.length ? `
+          <div class="detail-section detail-full">
+            <h3>Recommended Support</h3>
+            <ul>
+              ${item.remedies.map(r => `<li>${r} - test for beneficial resonance before recommending</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  } else if (tab === 'acupuncture') {
+    tabContent = `
+      <div class="detail-grid">
+        <div class="detail-section detail-full">
+          <h3>Supporting Acupuncture Points</h3>
+          <p style="margin-bottom: 16px; color: var(--cream-dim);">These points complement bioresonance treatment for ${item.name}. Click any point for full detail.</p>
+          <div class="acu-grid">
+            ${relatedPoints.map(p => renderAcuCard(p)).join('')}
+          </div>
+          ${!relatedPoints.length ? '<p style="color: var(--cream-dim);">No specific points mapped yet.</p>' : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-header">
+      <div>
+        <h2>${item.name}</h2>
+        <div class="detail-sub">${phase.name} - ${item.sub}</div>
+      </div>
+      <button class="detail-close" onclick="hideDetail()">&times;</button>
+    </div>
+    <div class="detail-tabs">
+      <button class="detail-tab ${tab === 'overview' ? 'active' : ''}" onclick="setDetailTab('overview')">Overview</button>
+      <button class="detail-tab ${tab === 'testing' ? 'active' : ''}" onclick="setDetailTab('testing')">Testing</button>
+      <button class="detail-tab ${tab === 'asking' ? 'active' : ''}" onclick="setDetailTab('asking')">Asking</button>
+      <button class="detail-tab ${tab === 'balance' ? 'active' : ''}" onclick="setDetailTab('balance')">Balance & Support</button>
+      <button class="detail-tab ${tab === 'acupuncture' ? 'active' : ''}" onclick="setDetailTab('acupuncture')">Acupuncture</button>
+    </div>
+    <div class="detail-content">
+      ${tabContent}
+    </div>
+  `;
+}
+
+function hideDetail() {
+  document.getElementById('detailPanel').classList.remove('active');
+  document.getElementById('detailOverlay').classList.remove('active');
+  state.selectedItem = null;
+  state.selectedPoint = null;
+}
+
+function setDetailTab(tab) {
+  state.detailTab = tab;
+  renderDetail();
+}
+
+// ============================================================
+// STATE MANAGEMENT
+// ============================================================
+function setPhase(phase) {
+  state.phase = phase;
+  renderFlowIndicator();
+  renderPhaseNav();
+  renderMain();
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  renderMain();
+}
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  state.search = e.target.value.trim();
+  renderMain();
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => setMode(btn.dataset.mode));
+});
+
+document.getElementById('detailOverlay').addEventListener('click', hideDetail);
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideDetail();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+renderFlowIndicator();
+renderPhaseNav();
+renderMain();
+</script>
+
+</body>
+</html>

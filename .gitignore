@@ -1,0 +1,6 @@
+manual-photos/
+node_modules/
+package.json
+package-lock.json
+bicom-check.mjs
+*.output

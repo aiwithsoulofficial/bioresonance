@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BICOM Optima - Clinical Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Nunito+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg:#f7f4ef; --surface:#ffffff; --surface-hover:#faf8f4; --surface-active:#eee9df;
+      --border:rgba(139,111,71,0.15); --border-hover:rgba(139,111,71,0.35);
+      --gold:#8b6f47; --gold-dim:rgba(139,111,71,0.12);
+      --cream:#2c2417; --cream-dim:rgba(44,36,23,0.5);
+      --sage:#4a7a4a; --beneficial:#3a8a4a; --detrimental:#b83030; --confused:#c49520;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:var(--bg);color:var(--cream);font-family:'Nunito Sans',sans-serif;min-height:100vh;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104'%3E%3Ccircle cx='60' cy='52' r='25' fill='none' stroke='rgba(139,111,71,0.035)' stroke-width='0.5'/%3E%3Ccircle cx='60' cy='27' r='25' fill='none' stroke='rgba(139,111,71,0.035)' stroke-width='0.5'/%3E%3Ccircle cx='81.65' cy='39.5' r='25' fill='none' stroke='rgba(139,111,71,0.035)' stroke-width='0.5'/%3E%3Ccircle cx='81.65' cy='64.5' r='25' fill='none' stroke='rgba(139,111,71,0.035)' stroke-width='0.5'/%3E%3Ccircle cx='60' cy='77' r='25' fill='none' stroke='rgba(139,111,71,0.035)' stroke-width='0.5'/%3E%3Ccircle cx='38.35' cy='64.5' r='25' fill='none' stroke='rgba(139,111,71,0.035)' stroke-width='0.5'/%3E%3Ccircle cx='38.35' cy='39.5' r='25' fill='none' stroke='rgba(139,111,71,0.035)' stroke-width='0.5'/%3E%3C/svg%3E")}
+
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;position:sticky;top:0;z-index:50}
+    .header-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .logo{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--gold);font-weight:700;white-space:nowrap}
+    .logo span{font-weight:400;font-size:0.7rem;color:var(--cream-dim);display:block;letter-spacing:2px}
+    .session-bar{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
+    .session-bar input,.session-bar select{padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-family:inherit;font-size:0.78rem;color:var(--cream)}
+    .session-bar input:focus,.session-bar select:focus{outline:none;border-color:var(--gold)}
+    .session-bar label{font-size:0.65rem;color:var(--cream-dim);text-transform:uppercase;letter-spacing:1px}
+    .btn{padding:5px 12px;border:1px solid var(--gold);border-radius:6px;background:var(--gold);color:white;font-family:inherit;font-size:0.72rem;cursor:pointer}
+    .btn:hover{opacity:0.9}
+    .btn-outline{background:transparent;color:var(--gold)}
+
+    .tabs{display:flex;gap:0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{padding:6px 14px;border:1px solid var(--border);background:transparent;font-family:'Cinzel',serif;font-size:0.7rem;color:var(--cream-dim);cursor:pointer;transition:all 0.2s;letter-spacing:1px;white-space:nowrap;flex-shrink:0}
+    .tab:first-child{border-radius:6px 0 0 6px}.tab:last-child{border-radius:0 6px 6px 0}
+    .tab.active{background:var(--gold);color:white;border-color:var(--gold)}
+
+    .search-bar{padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+    .search-bar input{width:100%;padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-family:inherit;font-size:0.85rem;color:var(--cream)}
+    .search-bar input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 12px var(--gold-dim)}
+    .search-bar input::placeholder{color:var(--cream-dim)}
+
+    main{max-width:960px;margin:0 auto;padding:16px 20px 80px}
+    .loading{text-align:center;padding:40px;color:var(--cream-dim);font-style:italic}
+
+    /* Guide Steps */
+    .guide-step{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;transition:all 0.3s}
+    .guide-step:hover{border-color:var(--border-hover)}
+    .guide-step.open{border-color:var(--gold);box-shadow:0 4px 16px var(--gold-dim)}
+    .step-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+    .step-header:hover{background:var(--surface-hover)}
+    .step-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:0.8rem;font-weight:700;color:white;flex-shrink:0}
+    .step-title{flex:1}.step-title h3{font-family:'Cinzel',serif;font-size:0.88rem;font-weight:600}.step-title p{font-size:0.68rem;color:var(--cream-dim);margin-top:1px}
+    .step-arrow{font-size:1rem;color:var(--cream-dim);transition:transform 0.3s}.guide-step.open .step-arrow{transform:rotate(180deg)}
+    .step-content{max-height:0;overflow:hidden;transition:max-height 0.5s ease}.guide-step.open .step-content{max-height:8000px}
+    .step-body{padding:16px;border-top:1px solid var(--border)}
+
+    /* Content Cards */
+    .card{background:var(--bg);border-radius:8px;padding:14px;margin-bottom:10px;border-left:4px solid var(--gold)}
+    .card h4{font-family:'Cinzel',serif;font-size:0.78rem;color:var(--gold);margin-bottom:6px;letter-spacing:1px}
+    .card p,.card li{font-size:0.8rem;line-height:1.65}
+    .card ul{list-style:none;padding:0}.card ul li{padding:2px 0 2px 14px;position:relative}
+    .card ul li::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--gold);position:absolute;left:0;top:11px}
+
+    .kelly{background:rgba(139,111,71,0.06);border:1px solid var(--gold-dim);border-radius:8px;padding:10px 14px;margin:10px 0;font-style:italic;font-size:0.78rem}
+    .kelly::before{content:'Kelly says: ';font-weight:700;font-style:normal;color:var(--gold)}
+
+    table.data{width:100%;border-collapse:collapse;margin:10px 0;font-size:0.75rem}
+    table.data th{background:var(--gold);color:white;padding:6px 10px;text-align:left;font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:1px}
+    table.data td{padding:6px 10px;border-bottom:1px solid var(--border)}
+    table.data tr:hover{background:var(--surface-hover)}
+    table.data .hl{background:rgba(139,111,71,0.06);font-weight:600}
+
+    .prog{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:6px 0}
+    .prog-num{font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:var(--gold);min-width:55px;text-align:center}
+    .prog-info{flex:1;font-size:0.78rem}.prog-info span{display:block;font-size:0.68rem;color:var(--cream-dim);margin-top:1px}
+    .prog-mode{padding:2px 7px;border-radius:4px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+    .m-hdi{background:rgba(139,111,71,0.1);color:var(--gold)}.m-ai{background:rgba(184,48,48,0.1);color:var(--detrimental)}
+    .m-h{background:rgba(58,138,74,0.1);color:var(--beneficial)}.m-di{background:rgba(75,127,160,0.1);color:#4a7fa0}
+    .m-a{background:rgba(123,104,174,0.1);color:#7b68ae}
+
+    .placement{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px;margin:10px 0}
+    .pl-item{background:var(--bg);border-radius:6px;padding:8px;text-align:center;border:1px solid var(--border)}
+    .pl-item .l{font-size:0.58rem;color:var(--cream-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+    .pl-item .v{font-size:0.72rem;font-weight:600}
+
+    .sub-step{background:var(--surface);border:1px solid var(--border);border-radius:6px;margin:6px 0;overflow:hidden}
+    .sub-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:0.78rem}
+    .sub-hdr:hover{background:var(--surface-hover)}
+    .sub-hdr .dot{width:7px;height:7px;border-radius:50%;background:var(--border-hover);flex-shrink:0}
+    .sub-body{display:none;padding:10px 12px;border-top:1px solid var(--border);font-size:0.78rem}
+    .sub-step.open .sub-body{display:block}
+
+    .banner{background:linear-gradient(135deg,rgba(139,111,71,0.08),rgba(139,111,71,0.03));border:1px solid var(--gold-dim);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+    .banner .sn{width:42px;height:42px;border-radius:50%;background:var(--gold);color:white;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;flex-shrink:0}
+    .banner h2{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--gold)}.banner p{font-size:0.72rem;color:var(--cream-dim);margin-top:3px}
+
+    /* Reference cards */
+    .ref-section{margin-bottom:20px}
+    .ref-section h3{font-family:'Cinzel',serif;font-size:0.9rem;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+    .ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+    .ref-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:all 0.2s}
+    .ref-card:hover{border-color:var(--border-hover);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+    .ref-card h4{font-family:'Cinzel',serif;font-size:0.8rem;margin-bottom:3px}.ref-card p{font-size:0.68rem;color:var(--cream-dim)}
+    .ref-card .pn{font-family:'Cinzel',serif;color:var(--gold);font-size:0.85rem;font-weight:700;margin-top:6px}
+
+    /* Symptom results */
+    .sym-result{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+    .sym-result h3{font-family:'Cinzel',serif;font-size:0.88rem;color:var(--gold);margin-bottom:6px}
+    .tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:2px}
+    .tag-cause{background:rgba(158,107,58,0.1);color:#9e6b3a}.tag-step{background:rgba(75,127,160,0.1);color:#4a7fa0}
+    .tag-prog{background:rgba(184,48,48,0.1);color:var(--detrimental)}.tag-meridian{background:rgba(74,122,74,0.1);color:var(--sage)}
+
+    /* Body diagram */
+    .body-svg{text-align:center;margin:12px 0}
+    .body-svg svg{max-width:280px;width:100%}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    .elec{animation:pulse 2s infinite}
+
+    /* Filters */
+    .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+    .filter-bar select,.filter-bar input{padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-family:inherit;font-size:0.78rem;color:var(--cream)}
+    .filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:var(--gold)}
+    .filter-label{font-size:0.65rem;color:var(--cream-dim);text-transform:uppercase;letter-spacing:1px}
+    .letter-nav{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:12px}
+    .letter-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;background:transparent;font-family:'Cinzel',serif;font-size:0.65rem;color:var(--cream-dim);cursor:pointer}
+    .letter-btn:hover,.letter-btn.active{background:var(--gold);color:white;border-color:var(--gold)}
+    .letter-btn.empty{opacity:0.3;cursor:default}
+    .count-badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:0.6rem;background:var(--gold-dim);color:var(--gold);margin-left:4px}
+    .proto-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;border-left:4px solid var(--gold)}
+    .proto-card h4{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);margin-bottom:8px}
+    .proto-steps{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .proto-step{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:0.72rem;display:flex;align-items:center;gap:6px}
+    .proto-step .sn{font-family:'Cinzel',serif;font-size:0.7rem;font-weight:700;color:var(--gold)}
+    .load-more{display:block;width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-family:inherit;font-size:0.78rem;color:var(--gold);cursor:pointer;text-align:center;margin-top:8px}
+    .load-more:hover{border-color:var(--gold);background:var(--gold-dim)}
+
+    @media(max-width:768px){
+      .header-row{flex-direction:column;align-items:stretch}.tabs{align-self:center}
+      main{padding:10px 10px 60px}.ref-grid{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+<!-- Auth gate -->
+<div id="authGate" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.08)">
+    <div style="font-family:Cinzel,serif;font-size:1.4rem;color:var(--gold);margin-bottom:4px">BICOM Optima</div>
+    <div style="font-size:0.7rem;color:var(--cream-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:24px">Clinical Guide & Database</div>
+    <p style="font-size:0.78rem;color:var(--cream-dim);margin-bottom:16px">Enter your authorised email to access.</p>
+    <input type="email" id="authEmail" placeholder="your@email.com" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.85rem;text-align:center;margin-bottom:12px;background:var(--bg);color:var(--cream)" onkeydown="if(event.key==='Enter')checkEmail()">
+    <button onclick="checkEmail()" style="width:100%;padding:10px;border:none;border-radius:8px;background:var(--gold);color:white;font-family:Cinzel,serif;font-size:0.8rem;cursor:pointer;letter-spacing:1px">Enter</button>
+    <p id="authError" style="color:var(--detrimental);font-size:0.72rem;margin-top:8px;display:none"></p>
+    <p style="font-size:0.6rem;color:var(--cream-dim);margin-top:20px;opacity:0.5">Built by AI with Soul - All rights reserved</p>
+  </div>
+</div>
+<div id="appContainer" style="display:none">
+<header>
+  <div class="header-row">
+    <div class="logo">BICOM Optima<span>Clinical Guide & Database</span></div>
+    <div class="session-bar">
+      <label>Client</label><input type="text" id="clientName" placeholder="Name..." style="width:120px">
+      <label>Session</label>
+      <select id="sessionNum"><option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option><option value="4">4th</option><option value="5">5th+</option></select>
+      <button class="btn" onclick="startSession()">Start</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="setMode('guide')">Guide</button>
+      <button class="tab" onclick="setMode('programs')">Programs</button>
+      <button class="tab" onclick="setMode('protocols')">Protocols</button>
+      <button class="tab" onclick="setMode('strains')">Strains</button>
+      <button class="tab" onclick="setMode('reference')">Reference</button>
+    </div>
+  </div>
+</header>
+<div class="search-bar">
+  <input type="search" id="searchInput" placeholder="Search symptoms, programs, strains, conditions..." oninput="handleSearch(this.value)">
+</div>
+<main id="main"><div class="loading">Loading from database...</div></main>
+
+<script>
+const SUPABASE_URL = 'https://jiquevvzrdavgqonvvug.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppcXVldnZ6cmRhdmdxb252dnVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5NzIxNzIsImV4cCI6MjA4NzU0ODE3Mn0.e4mYjXj8TGTC0_UCm3QCKGSv8Cl-migIl7reYIKNcW4';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let mode = 'guide';
+let DB = {};
+let sessionStarted = false;
+
+// Load all data on startup
+async function loadDB() {
+  const tables = ['bio_programs','bio_strains','bio_interpretations','bio_meridians','bio_constitutional','bio_saved_substances','bio_five_element','bio_special_protocols','bio_treatment_series','bio_treatment_series_steps','bio_acupuncture_points','bio_nutrient_points','bio_symptoms','bio_manual_images'];
+  // bio_programs has 1500+ rows - fetch in two batches to bypass 1000 row default
+  const results = await Promise.all(tables.map(t => sb.from(t).select('*').limit(1000)));
+  tables.forEach((t, i) => { DB[t.replace('bio_','')] = results[i].data || []; });
+  // Fetch remaining programs (batch 2)
+  const batch2 = await sb.from('bio_programs').select('*').range(1000, 2000);
+  if (batch2.data && batch2.data.length) DB.programs = DB.programs.concat(batch2.data);
+  render();
+}
+
+let progFilter = { cat: 'all', sub: 'all', letter: 'all', limit: 60 };
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase() === m));
+  document.getElementById('searchInput').value = '';
+  progFilter = { cat: 'all', sub: 'all', letter: 'all', limit: 60 };
+  render();
+}
+
+function startSession() { sessionStarted = true; render(); }
+
+function toggleStep(el) { el.closest('.guide-step').classList.toggle('open'); }
+function toggleSub(el) { el.closest('.sub-step').classList.toggle('open'); }
+
+const SESSION_INFO = {
+  1: { name:'Initial Assessment', desc:'Focus on blockages, basic therapy, initial strain identification. Run at least one detox program.' },
+  2: { name:'Strain Treatment Begins', desc:'Re-test blockages. Treat priority strains (max 6). Include detoxification.' },
+  3: { name:'Deep Strain Work', desc:'Continue strains. Begin constitutional support. Detox.' },
+  4: { name:'Constitutional & Detox', desc:'Focus on constitutional support, deficiencies, deeper detoxification.' },
+  5: { name:'Maintenance & Advanced', desc:'Re-test everything. Advanced techniques (CTT, Five Element). Ongoing support.' }
+};
+
+function modeClass(m) {
+  if (!m) return '';
+  const ml = m.toLowerCase();
+  if (ml.includes('h+di') || ml.includes('h + di')) return 'm-hdi';
+  if (ml === 'ai' || ml === 'a+ai') return 'm-ai';
+  if (ml === 'h') return 'm-h';
+  if (ml === 'di') return 'm-di';
+  if (ml === 'a') return 'm-a';
+  return 'm-hdi';
+}
+
+function progCard(num, name, desc, tm) {
+  return `<div class="prog"><div class="prog-num">${num}</div><div class="prog-info">${name}${desc ? `<span>${desc}</span>` : ''}</div>${tm ? `<span class="prog-mode ${modeClass(tm)}">${tm}</span>` : ''}</div>`;
+}
+
+function interpTable(tableName) {
+  const rows = (DB.interpretations || []).filter(r => r.table_name === tableName).sort((a,b) => a.sort_order - b.sort_order);
+  if (!rows.length) return '';
+  const cols = tableName === 'eap_strain' ? ['Strain Type','Test Points'] : ['Reading','State','Action'];
+  let html = `<table class="data"><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr>`;
+  rows.forEach(r => {
+    if (tableName === 'eap_strain') {
+      html += `<tr><td>${r.reading_range}</td><td>${r.recommended_actions || ''}</td></tr>`;
+    } else {
+      html += `<tr${r.reading_range==='80-89'||r.reading_range==='80'||r.reading_range==='48-60'||r.reading_range==='35-48'?' class="hl"':''}><td><strong>${r.reading_range}</strong></td><td>${r.reading_description}</td><td>${r.recommended_actions || ''}</td></tr>`;
+    }
+  });
+  return html + '</table>';
+}
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function render() {
+  const main = document.getElementById('main');
+  if (!DB.programs) { main.innerHTML = '<div class="loading">Loading...</div>'; return; }
+  if (mode === 'guide') renderGuide(main);
+  else if (mode === 'programs') renderPrograms(main);
+  else if (mode === 'protocols') renderProtocols(main);
+  else if (mode === 'strains') renderStrains(main);
+  else renderReference(main);
+}
+
+function renderGuide(main) {
+  const sn = document.getElementById('sessionNum').value;
+  const si = SESSION_INFO[sn];
+  const client = document.getElementById('clientName').value || 'Client';
+
+  let html = '';
+  if (sessionStarted) {
+    html += `<div class="banner"><div class="sn">${sn}</div><div><h2>${client} - Session ${sn}: ${si.name}</h2><p>${si.desc}</p></div></div>`;
+  }
+
+  const steps = [
+    { num:1, title:'Client Setup', sub:'Prepare client and machine', color:'#6b8f6b', content: renderSetupStep },
+    { num:2, title:'Conductance Reading', sub:'Determine energetic state', color:'#b8942e', content: renderConductanceStep },
+    { num:3, title:'Basic Therapy', sub:'Balance the body before testing', color:'#b8942e', content: renderBasicStep },
+    { num:4, title:'Hypothalamus', sub:'Check head interference fields', color:'#b8942e', content: renderHypothalamusStep },
+    { num:5, title:'Quadrant Testing', sub:'Assess energy distribution', color:'#b8942e', content: renderQuadrantStep },
+    { num:6, title:'Meridian Balance', sub:'Check organ/meridian energy', color:'#b8942e', content: renderMeridianStep },
+    { num:7, title:'Blockage Testing', sub:'Test for all blockage types', color:'#9e6b3a', content: renderBlockageStep },
+    { num:8, title:'Blockage Treatment', sub:'Treat blockages found', color:'#9e6b3a', content: renderBlockageTreatStep },
+    { num:9, title:'Strain Testing', sub:'Identify strains (program 1191)', color:'#b83030', content: renderStrainTestStep },
+    { num:10, title:'Strain Treatment', sub:'Treat prioritised strains (max 6)', color:'#b83030', content: renderStrainTreatStep },
+    { num:11, title:'Constitutional Support', sub:'Support weakened organs/systems', color:'#4a7fa0', content: renderConstitutionalStep },
+    { num:12, title:'Detoxification', sub:'ALWAYS - open drainage pathways', color:'#7b68ae', content: renderDetoxStep },
+    { num:13, title:'Session Close', sub:'Document and schedule follow-up', color:'#6b8f6b', content: renderCloseStep }
+  ];
+
+  steps.forEach(s => {
+    html += `<div class="guide-step"><div class="step-header" onclick="toggleStep(this)"><div class="step-num" style="background:${s.color}">${s.num}</div><div class="step-title"><h3>${s.title}</h3><p>${s.sub}</p></div><span class="step-arrow">&#9662;</span></div><div class="step-content"><div class="step-body">${s.content()}</div></div></div>`;
+  });
+
+  main.innerHTML = html;
+}
+
+// Individual step renderers that pull from the database
+function renderSetupStep() {
+  return `<div class="card"><h4>Preparation Checklist</h4><ul>
+    <li>Client removes ALL metal jewellery, watches, belts</li>
+    <li>Mobile phone on airplane mode or away from area</li>
+    <li>Client on therapy bed with <strong>modulation mat</strong> behind back</li>
+    <li>Client holds <strong>brass hand cylinders</strong> (input)</li>
+    <li>Feet on <strong>brass foot plates</strong> (output) or mod mat as output</li>
+    <li>Moisture on EAP measurement points if testing</li>
+    <li>BICOM Optima calibrated and on</li></ul></div>
+    <div class="kelly">Always check - has the client had enough water? A dehydrated body cannot hold frequencies. Give them water before you start.</div>
+    <div class="card"><h4>Electrode Placement</h4>
+    <div class="body-svg"><svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="150" cy="40" rx="26" ry="32" fill="none" stroke="#8b6f47" stroke-width="1.5" opacity="0.5"/>
+      <line x1="150" y1="72" x2="150" y2="210" stroke="#8b6f47" stroke-width="1.5" opacity="0.5"/>
+      <line x1="150" y1="95" x2="82" y2="180" stroke="#8b6f47" stroke-width="1.5" opacity="0.5"/>
+      <line x1="150" y1="95" x2="218" y2="180" stroke="#8b6f47" stroke-width="1.5" opacity="0.5"/>
+      <line x1="150" y1="210" x2="112" y2="360" stroke="#8b6f47" stroke-width="1.5" opacity="0.5"/>
+      <line x1="150" y1="210" x2="188" y2="360" stroke="#8b6f47" stroke-width="1.5" opacity="0.5"/>
+      <rect x="122" y="85" width="56" height="115" rx="5" fill="rgba(184,48,48,0.06)" stroke="#b83030" stroke-width="0.8" stroke-dasharray="3,2"/>
+      <text x="150" y="145" text-anchor="middle" fill="#b83030" font-size="6.5" font-weight="600">MOD MAT</text>
+      <text x="150" y="155" text-anchor="middle" fill="#b83030" font-size="5.5">(OUTPUT)</text>
+      <circle cx="74" cy="185" r="7" fill="rgba(75,127,160,0.25)" stroke="#4a7fa0" stroke-width="1.5" class="elec"/>
+      <circle cx="226" cy="185" r="7" fill="rgba(75,127,160,0.25)" stroke="#4a7fa0" stroke-width="1.5" class="elec"/>
+      <text x="74" y="200" text-anchor="middle" fill="#4a7fa0" font-size="5.5" font-weight="600">INPUT</text>
+      <text x="226" y="200" text-anchor="middle" fill="#4a7fa0" font-size="5.5" font-weight="600">INPUT</text>
+      <rect x="98" y="355" width="20" height="10" rx="3" fill="rgba(184,48,48,0.08)" stroke="#b83030" stroke-width="0.7"/>
+      <rect x="182" y="355" width="20" height="10" rx="3" fill="rgba(184,48,48,0.08)" stroke="#b83030" stroke-width="0.7"/>
+      <text x="150" y="385" text-anchor="middle" fill="#b83030" font-size="5.5">FOOT PLATES (alt output)</text>
+    </svg></div></div>`;
+}
+
+function renderConductanceStep() {
+  return `<div class="card"><h4>How to Take the Reading</h4><ul>
+    <li>Moisture on hand electrodes, connect probe to blue cable</li>
+    <li>Place next to small hole on top of cylinder</li>
+    <li>Press foot pedal to record - optimal: <strong>80-86</strong></li>
+    <li>Optima prints value when foot pedal depressed</li></ul></div>
+    <div class="card"><h4>Which Basic Therapy to Use</h4>${interpTable('conductance')}</div>
+    <div class="kelly">The conductance reading tells you the client's overall energetic state RIGHT NOW. It changes between sessions, with seasons, even time of day. Always re-test - never assume. On the Optima, ALWAYS run the 3xxx LDF program first (Step 1), then the standard program (Step 2).</div>`;
+}
+
+function renderBasicStep() {
+  const basics = (DB.programs||[]).filter(p => p.category==='basic' && p.subcategory==='extended').sort((a,b)=>a.program_number.localeCompare(b.program_number));
+  let html = `<div class="card"><h4>Run Basic Therapy from Step 2</h4><p>Select program based on conductance. The basic therapy strengthens healthy energies and suppresses pathological ones.</p></div>
+    <div class="placement"><div class="pl-item"><div class="l">IC</div><div class="v">Saliva</div></div><div class="pl-item"><div class="l">OC</div><div class="v">Oil/minerals/pillules</div></div><div class="pl-item"><div class="l">MD</div><div class="v">Chip</div></div><div class="pl-item"><div class="l">Input</div><div class="v">Left hand plate</div></div><div class="pl-item"><div class="l">Output</div><div class="v">Mod mat on back</div></div><div class="pl-item"><div class="l">Check</div><div class="v">Schumann + 2nd ch</div></div></div>
+    <div class="card"><h4>Optima Extended Basic Programs</h4><table class="data"><tr><th>State</th><th>Program</th><th>Mode</th><th>Time</th></tr>`;
+  basics.forEach(p => { html += `<tr><td>${p.name.replace('Extended Basic - ','')}</td><td><strong>${p.program_number}</strong></td><td>${p.therapy_mode||''}</td><td>${p.time_minutes||''} min</td></tr>`; });
+  return html + `</table></div><div class="kelly">On the Optima, programs show electrode placement on screen - follow those. The Optima runs LDF + standard as a sequence automatically.</div>`;
+}
+
+function renderHypothalamusStep() {
+  return `<div class="card"><h4>How to Test</h4><ul><li>Not taken on children under 5</li><li>Points: dimple above where ear meets face</li><li>Optima: press <strong>7</strong> for testing menu</li><li>Probe vertically, even pressure, foot pedal 3x</li><li>Normal: <strong>80-82</strong></li></ul></div>
+    <div class="card"><h4>Interpretation</h4>${interpTable('hypothalamus')}</div>`;
+}
+
+function renderQuadrantStep() {
+  return `<div class="card"><h4>How to Test</h4><ul><li>Points: middle of pad of each <strong>thumb</strong> and <strong>big toe</strong></li><li>Dampen each spot first</li><li>Normal: <strong>30-40</strong></li><li>Can't get reliable readings? Use program <strong>133.0 or 433</strong></li></ul></div>
+    <div class="card"><h4>Pattern Interpretation</h4>${interpTable('quadrant')}</div>
+    <div class="card"><h4>Quadrant-Based Basic Therapy</h4>${interpTable('quadrant_basic')}</div>`;
+}
+
+function renderMeridianStep() {
+  const meris = (DB.meridians||[]).sort((a,b) => a.id - b.id);
+  let html = `<div class="card"><h4>Meridian Readings - Optimal: 48-60</h4>${interpTable('meridian')}</div>
+    <div class="card"><h4>Meridian Treatment Programs (Optima)</h4>
+    <table class="data"><tr><th>Meridian</th><th>LDF 1st</th><th>LDF 2nd</th><th>Acute</th><th>Chronic</th><th>Input</th></tr>`;
+  meris.forEach(m => {
+    html += `<tr><td><strong>${m.name}</strong> (${m.symbol})</td><td>${m.optima_ldf_1st ? `<strong>${m.optima_ldf_1st}</strong>` : '<em>std</em>'}</td><td>${m.optima_ldf_2nd||''}</td><td>${m.acute_program}</td><td>${m.chronic_program}</td><td>${m.input_placement||''}</td></tr>`;
+  });
+  html += '</table></div>';
+
+  // Add acupuncture points
+  const acu = (DB.acupuncture_points||[]).filter(p=>p.importance==='critical').sort((a,b)=>a.id-b.id);
+  if (acu.length) {
+    html += `<div class="card"><h4>Key Acupuncture Points for Meridian Support</h4><table class="data"><tr><th>Point</th><th>Meridian</th><th>Location</th><th>Bioresonance Use</th></tr>`;
+    acu.forEach(p => { html += `<tr><td><strong>${p.point_code}</strong><br><em style="font-size:0.65rem">${p.chinese_name}</em></td><td>${p.meridian}</td><td style="font-size:0.7rem">${p.location}</td><td style="font-size:0.7rem">${p.bioresonance_use}</td></tr>`; });
+    html += '</table></div>';
+    html += `<div class="kelly">The Four Gates (LI4 + LR3 bilateral) is the most powerful blockage-clearing combination. Kane - use this during blockage clearing for total channel opening. ST36 should be used in EVERY session.</div>`;
+  }
+  return html;
+}
+
+function renderBlockageStep() {
+  const blockProgs = (DB.programs||[]).filter(p => p.category==='blockage');
+  const groups = {};
+  blockProgs.forEach(p => { const k = p.subcategory||'other'; if(!groups[k]) groups[k]=[]; groups[k].push(p); });
+
+  let html = `<div class="card"><h4>Blockages Must Be Cleared FIRST</h4><p>A blocked system cannot respond accurately. Test each type systematically. Initial test: <strong>1191 (Ai 64)</strong>, subsequent: <strong>191</strong>.</p></div>`;
+
+  const order = ['inversion','metals','radiation','geopathic','scars','cranial','spinal','laterality','hyoid','mandibular','chakra','opiates','nape','tissue','dental'];
+  const labels = {inversion:'Inversion',metals:'Metals (Toxic Overload)',radiation:'Radiation (Geopathic/EMF/Nuclear)',geopathic:'Geopathic/EMF Treatment',scars:'Scars (Internal & External)',cranial:'Cranial / Birth Trauma',spinal:'Spinal Blocks',laterality:'Laterality',hyoid:'Hyoid Bone',mandibular:'Mandibular (Jaw) Joint',chakra:'Chakras',opiates:'Opiates/Drug Abuse',nape:'Nape Blockage',tissue:'Tissue Blockage',dental:'Dental'};
+
+  order.forEach(sub => {
+    const progs = groups[sub];
+    if (!progs) return;
+    html += `<div class="sub-step" onclick="toggleSub(this)"><div class="sub-hdr"><div class="dot"></div><strong>${labels[sub]||sub}</strong> (${progs.length} programs)</div><div class="sub-body">`;
+    progs.forEach(p => { html += progCard(p.program_number, p.name, p.input_placement ? `Input: ${p.input_placement}` : (p.description||''), p.therapy_mode); });
+    if (sub==='metals') html += `<div class="kelly">Always provoke for metals even if they don't initially test. Mercury hides. Gold hides. They ALL hide. Use 972 to unmask, then always treat on 998.</div>`;
+    if (sub==='scars') html += `<div class="kelly">C-section scars are extremely common and often missed. Always check. All scars need 2-3 treatments.</div>`;
+    if (sub==='hyoid') html += `<div class="kelly">Program 570 (Increasing Resistance) must ALWAYS follow hyoid and mandibular treatments.</div>`;
+    html += '</div></div>';
+  });
+  return html;
+}
+
+function renderBlockageTreatStep() {
+  return `<div class="card"><h4>Treatment Priority</h4><ul>
+    <li>Treat in order found. Use programs from Step 7.</li>
+    <li>Check <strong>Schumann waves + 2nd channel</strong> after each</li>
+    <li>Program <strong>570</strong> ALWAYS after hyoid/mandibular</li>
+    <li>Scars need <strong>2-3 sessions</strong> to clear</li>
+    <li>Reaction? Program <strong>127</strong> (H lowest amp) or <strong>128</strong> (H+Di lowest amp) + water</li></ul></div>
+    <div class="kelly">Don't try to clear everything in one session. Prioritise. The body can only process so much. Less is more with blockages.</div>`;
+}
+
+function renderStrainTestStep() {
+  return `<div class="card"><h4>Testing Procedure</h4><ul>
+    <li>Initial: program <strong>1191 (Ai 64)</strong></li>
+    <li>Subsequent: program <strong>191</strong></li>
+    <li>Place vial in honeycomb, take base reading then second</li>
+    <li>Shifts towards 50 = <strong>IS a strain</strong></li>
+    <li>No change = <strong>not a strain</strong></li>
+    <li>Maximum <strong>6 strains per session</strong></li></ul></div>
+    <div class="card"><h4>EAP Testing Points by Strain Type</h4>${interpTable('eap_strain')}</div>
+    <div class="kelly">Parasites establish symbiotic relationships - the body accepts them. If symptoms persist but nothing tests, PROVOKE on 133 then retest.</div>`;
+}
+
+function renderStrainTreatStep() {
+  const strainTypes = {};
+  (DB.strains||[]).forEach(s => { if(!strainTypes[s.category]) strainTypes[s.category] = s; });
+  let html = `<div class="card"><h4>Treatment Programs by Strain Type</h4><table class="data"><tr><th>Strain</th><th>1st Treatment</th><th>Follow-up</th><th>Spin</th></tr>`;
+  Object.values(strainTypes).forEach(s => {
+    html += `<tr><td>${s.category}</td><td><strong>${s.first_treatment_program}</strong></td><td><strong>${s.followup_treatment_program}</strong></td><td>${s.spin_tester_setting||''}</td></tr>`;
+  });
+  html += `</table></div>
+    <div class="placement"><div class="pl-item"><div class="l">IC</div><div class="v">Vial of strain</div></div><div class="pl-item"><div class="l">OC</div><div class="v">Oil/minerals/pillules</div></div><div class="pl-item"><div class="l">MD</div><div class="v">Chip</div></div><div class="pl-item"><div class="l">Input</div><div class="v">None</div></div><div class="pl-item"><div class="l">Output</div><div class="v">Mod mat + hand balls</div></div><div class="pl-item"><div class="l">Check</div><div class="v">Schumann + 2nd ch</div></div></div>
+    <div class="kelly">Candida treatment only after metals treated - session 3 or 4. Candida is a SYMPTOM of terrain imbalance. Fix the Spleen/dampness or it comes right back.</div>`;
+  return html;
+}
+
+function renderConstitutionalStep() {
+  const cats = {};
+  (DB.constitutional||[]).forEach(c => { if(!cats[c.category]) cats[c.category]=[]; cats[c.category].push(c); });
+  let html = `<div class="card"><h4>Support Weakened Organs & Systems</h4><p>Test and treat as indicated. These programs boost energetic output of weakened systems.</p></div>`;
+  const catOrder = ['cardiovascular','digestion','emotional','endocrine','metabolic_fatigue','respiration','skin','musculoskeletal','nervous','pain','eyes','ears','urology','viral_bacterial'];
+  const catLabels = {cardiovascular:'Cardiovascular',digestion:'Digestion',emotional:'Emotional',endocrine:'Endocrine',metabolic_fatigue:'Metabolic Fatigue',respiration:'Respiration',skin:'Skin',musculoskeletal:'Musculoskeletal',nervous:'Nervous System',pain:'Pain',eyes:'Eyes',ears:'Ears',urology:'Urology',viral_bacterial:'Viral & Bacterial'};
+  catOrder.forEach(cat => {
+    const items = cats[cat];
+    if (!items) return;
+    html += `<div class="sub-step" onclick="toggleSub(this)"><div class="sub-hdr"><div class="dot"></div><strong>${catLabels[cat]||cat}</strong> (${items.length} programs)</div><div class="sub-body"><table class="data"><tr><th>Condition</th><th>Programs</th></tr>`;
+    items.forEach(c => { html += `<tr><td>${c.name}</td><td><strong>${(c.programs||[]).join(', ')}</strong></td></tr>`; });
+    html += '</table></div></div>';
+  });
+
+  // Treatment Series
+  const series = (DB.treatment_series||[]).sort((a,b)=>a.id-b.id);
+  const seriesSteps = DB.treatment_series_steps||[];
+  if (series.length) {
+    html += `<div class="card"><h4>Treatment Series (Multi-Step Protocols)</h4></div>`;
+    series.forEach(s => {
+      const steps = seriesSteps.filter(st => st.series_id === s.id).sort((a,b) => a.step_number - b.step_number);
+      html += `<div class="sub-step" onclick="toggleSub(this)"><div class="sub-hdr"><div class="dot"></div><strong>${s.name}</strong> (${steps.length} steps)</div><div class="sub-body">`;
+      if (s.description) html += `<p style="margin-bottom:8px;font-size:0.78rem;">${s.description}</p>`;
+      steps.forEach(st => { html += progCard(st.program_number, st.step_name || `Step ${st.step_number}`, st.notes||'', st.therapy_mode); });
+      html += '</div></div>';
+    });
+  }
+
+  // Special Protocols
+  const specials = DB.special_protocols||[];
+  if (specials.length) {
+    html += `<div class="card"><h4>Special Population Protocols</h4></div>`;
+    specials.forEach(sp => {
+      html += `<div class="sub-step" onclick="toggleSub(this)"><div class="sub-hdr"><div class="dot"></div><strong>${sp.name}</strong></div><div class="sub-body">
+        <p>${sp.description||''}</p>
+        ${sp.contraindications ? `<p style="color:var(--detrimental);margin-top:6px"><strong>Contraindications:</strong> ${sp.contraindications}</p>` : ''}
+        ${sp.modified_programs ? `<p style="margin-top:6px"><strong>Modified approach:</strong> ${sp.modified_programs}</p>` : ''}
+        ${sp.kelly_notes ? `<div class="kelly">${sp.kelly_notes}</div>` : ''}
+      </div></div>`;
+    });
+  }
+  return html;
+}
+
+function renderDetoxStep() {
+  const detoxProgs = (DB.programs||[]).filter(p => p.category==='detox').sort((a,b)=>a.subcategory.localeCompare(b.subcategory));
+  const groups = {};
+  detoxProgs.forEach(p => { const k=p.subcategory||'other'; if(!groups[k]) groups[k]=[]; groups[k].push(p); });
+
+  let html = `<div class="card" style="border-left-color:var(--detrimental)"><h4>CRITICAL: Detox is ALWAYS Last</h4><p>Never mobilise toxins before drainage is open. At least ONE detox program in EVERY session.</p></div>`;
+  const labels = {liver:'Liver',kidney:'Kidney',lymph:'Lymph',toxin:'Toxin Release'};
+  Object.entries(groups).forEach(([sub, progs]) => {
+    html += `<div class="card"><h4>${labels[sub]||sub} Drainage</h4>`;
+    progs.forEach(p => { html += progCard(p.program_number, p.name, p.is_optima_ldf ? 'Optima LDF' : 'Standard', p.therapy_mode); });
+    html += '</div>';
+  });
+  html += `<div class="kelly">Rule #1: if the bowel isn't moving, STOP everything else. Fix bowel drainage first. Client needs at least one well-formed movement daily before pushing detox.</div>`;
+  return html;
+}
+
+function renderCloseStep() {
+  return `<div class="card"><h4>Closing Checklist</h4><ul>
+    <li>Check Schumann waves and second channel</li>
+    <li>Remove all applicators, client rests 1-2 minutes</li>
+    <li>Give output cup contents with usage instructions</li>
+    <li>Record ALL findings - tested, found, treated</li>
+    <li>Home support: water, rest, avoid stress</li>
+    <li>Book follow-up</li></ul></div>
+    <div class="card"><h4>Session Frequency</h4><table class="data">
+    <tr><th>Condition</th><th>Frequency</th></tr>
+    <tr><td>Acute</td><td>1-2x per week</td></tr>
+    <tr><td>Chronic</td><td>Every 1-2 weeks</td></tr>
+    <tr><td>Maintenance</td><td>Monthly</td></tr>
+    <tr><td>Children / sensitive</td><td>Less frequent, lower amplification</td></tr>
+    <tr><td>Chronically unwell</td><td>No more than every 5-7 days</td></tr></table></div>`;
+}
+
+// ============================================================
+// PROGRAMS TAB
+// ============================================================
+function renderPrograms(main) {
+  const allProgs = (DB.programs||[]).sort((a,b) => (a.name||'').localeCompare(b.name||''));
+  const catLabels = {basic:'Basic Therapy',blockage:'Blockages',strain:'Strain Treatment',energy:'Energy Stabilisation',detox:'Detoxification',emotional:'Emotional',constitutional:'Constitutional Support',advanced:'Advanced Techniques',potentisation:'Potentisation'};
+
+  // Get unique categories and subcategories
+  const allCats = [...new Set(allProgs.map(p=>p.category))].filter(Boolean).sort();
+  const allSubs = [...new Set(allProgs.filter(p => progFilter.cat==='all' || p.category===progFilter.cat).map(p=>p.subcategory))].filter(Boolean).sort();
+
+  // Get letter counts
+  const letterCounts = {};
+  allProgs.forEach(p => { const l = (p.name||'X')[0].toUpperCase(); letterCounts[l] = (letterCounts[l]||0)+1; });
+
+  // Filter programs
+  let filtered = allProgs;
+  if (progFilter.cat !== 'all') filtered = filtered.filter(p => p.category === progFilter.cat);
+  if (progFilter.sub !== 'all') filtered = filtered.filter(p => p.subcategory === progFilter.sub);
+  if (progFilter.letter !== 'all') filtered = filtered.filter(p => (p.name||'')[0].toUpperCase() === progFilter.letter);
+
+  let html = `<h2 style="font-family:Cinzel,serif;color:var(--gold);margin-bottom:4px">${allProgs.length} Programs in Database</h2>
+    <p style="font-size:0.75rem;color:var(--cream-dim);margin-bottom:12px">Showing ${Math.min(filtered.length, progFilter.limit)} of ${filtered.length} matching programs</p>`;
+
+  // Filter controls
+  html += `<div class="filter-bar">
+    <span class="filter-label">Category</span>
+    <select onchange="progFilter.cat=this.value;progFilter.sub='all';progFilter.limit=60;render()">
+      <option value="all"${progFilter.cat==='all'?' selected':''}>All Categories</option>
+      ${allCats.map(c => `<option value="${c}"${progFilter.cat===c?' selected':''}>${catLabels[c]||c} (${allProgs.filter(p=>p.category===c).length})</option>`).join('')}
+    </select>
+    <span class="filter-label">Subcategory</span>
+    <select onchange="progFilter.sub=this.value;progFilter.limit=60;render()">
+      <option value="all"${progFilter.sub==='all'?' selected':''}>All</option>
+      ${allSubs.map(s => `<option value="${s}"${progFilter.sub===s?' selected':''}>${s}</option>`).join('')}
+    </select>
+  </div>`;
+
+  // Letter navigation
+  html += '<div class="letter-nav">';
+  html += `<button class="letter-btn${progFilter.letter==='all'?' active':''}" onclick="progFilter.letter='all';progFilter.limit=60;render()">All</button>`;
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => {
+    const cnt = letterCounts[l]||0;
+    html += `<button class="letter-btn${progFilter.letter===l?' active':''}${cnt===0?' empty':''}" onclick="${cnt?`progFilter.letter='${l}';progFilter.limit=60;render()`:''}">` + l + '</button>';
+  });
+  html += '</div>';
+
+  // Program cards
+  const shown = filtered.slice(0, progFilter.limit);
+  html += '<div class="ref-grid">';
+  shown.forEach(p => {
+    html += `<div class="ref-card"><h4>${p.name||'Unnamed'}</h4><p>${p.description ? p.description.substring(0,80) : (p.subcategory||'')}</p><div class="pn">${p.program_number}${p.therapy_mode ? ` <span class="prog-mode ${modeClass(p.therapy_mode)}" style="font-size:0.55rem">${p.therapy_mode}</span>` : ''}${p.time_minutes ? ` <span style="font-size:0.65rem;color:var(--cream-dim)">${p.time_minutes}min</span>` : ''}${p.is_optima_ldf ? ' <span style="font-size:0.55rem;color:var(--sage)">LDF</span>' : ''}</div></div>`;
+  });
+  html += '</div>';
+
+  if (filtered.length > progFilter.limit) {
+    html += `<button class="load-more" onclick="progFilter.limit+=60;render()">Load more (${filtered.length - progFilter.limit} remaining)</button>`;
+  }
+
+  main.innerHTML = html;
+}
+
+// ============================================================
+// PROTOCOLS TAB
+// ============================================================
+function renderProtocols(main) {
+  const allProgs = (DB.programs||[]);
+
+  // Group programs by PS number (from description field)
+  const protocols = {};
+  allProgs.forEach(p => {
+    const desc = p.description || '';
+    const psMatch = desc.match(/PS\s*(\d+)/i);
+    if (psMatch) {
+      const ps = 'PS ' + psMatch[1];
+      if (!protocols[ps]) protocols[ps] = { ps, programs: [], conditions: new Set() };
+      protocols[ps].programs.push(p);
+      protocols[ps].conditions.add(p.name.replace(/\s*step\s*\d+/i,'').replace(/\s*LDF.*$/i,'').trim());
+    }
+  });
+
+  // Also group by condition name pattern (multi-step treatments)
+  const stepPatterns = {};
+  allProgs.forEach(p => {
+    const name = p.name || '';
+    const stepMatch = name.match(/^(.+?)\s+step\s+(\d+)/i);
+    if (stepMatch) {
+      const condition = stepMatch[1].trim();
+      if (!stepPatterns[condition]) stepPatterns[condition] = [];
+      stepPatterns[condition].push({ ...p, stepNum: parseInt(stepMatch[2]) });
+    }
+  });
+
+  // Merge into display list
+  const protoList = [];
+  Object.values(protocols).forEach(proto => {
+    protoList.push({
+      title: proto.ps + ' - ' + [...proto.conditions].slice(0,2).join(' / '),
+      ps: proto.ps,
+      programs: proto.programs.sort((a,b) => (a.name||'').localeCompare(b.name||''))
+    });
+  });
+  Object.entries(stepPatterns).forEach(([condition, steps]) => {
+    if (steps.length >= 2) {
+      const existing = protoList.find(p => p.programs.some(pr => steps.some(s => s.id === pr.id)));
+      if (!existing) {
+        protoList.push({
+          title: condition,
+          ps: null,
+          programs: steps.sort((a,b) => a.stepNum - b.stepNum)
+        });
+      }
+    }
+  });
+
+  protoList.sort((a,b) => (a.title||'').localeCompare(b.title||''));
+
+  let html = `<h2 style="font-family:Cinzel,serif;color:var(--gold);margin-bottom:4px">${protoList.length} Treatment Protocols</h2>
+    <p style="font-size:0.75rem;color:var(--cream-dim);margin-bottom:12px">Multi-step treatment sequences from the Regumed manual</p>
+    <div class="filter-bar">
+      <input type="search" id="protoSearch" placeholder="Filter protocols..." oninput="filterProtocols(this.value)" style="flex:1">
+    </div>
+    <div id="protoList">`;
+
+  protoList.forEach((proto, idx) => {
+    html += `<div class="proto-card" data-proto="${idx}">
+      <h4>${proto.title}${proto.ps ? ` <span class="count-badge">${proto.programs.length} steps</span>` : ` <span class="count-badge">${proto.programs.length} steps</span>`}</h4>
+      <div class="proto-steps">`;
+    proto.programs.forEach((p, si) => {
+      html += `<div class="proto-step"><span class="sn">${si+1}</span> <strong>${p.program_number}</strong> ${p.name||''} ${p.therapy_mode ? `<span class="prog-mode ${modeClass(p.therapy_mode)}" style="font-size:0.5rem">${p.therapy_mode}</span>` : ''} ${p.time_minutes ? `<span style="font-size:0.65rem;color:var(--cream-dim)">${p.time_minutes}m</span>` : ''}</div>`;
+    });
+    html += '</div></div>';
+  });
+
+  html += '</div>';
+  main.innerHTML = html;
+}
+
+function filterProtocols(q) {
+  const ql = q.toLowerCase();
+  document.querySelectorAll('.proto-card').forEach(card => {
+    card.style.display = card.textContent.toLowerCase().includes(ql) ? '' : 'none';
+  });
+}
+
+// ============================================================
+// STRAINS TAB
+// ============================================================
+function renderStrains(main) {
+  const strains = (DB.strains||[]).sort((a,b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+  const cats = {};
+  strains.forEach(s => { const k=s.category; if(!cats[k]) cats[k]=[]; cats[k].push(s); });
+
+  let html = `<h2 style="font-family:Cinzel,serif;color:var(--gold);margin-bottom:4px">${strains.length} Strains in Database</h2>
+    <p style="font-size:0.75rem;color:var(--cream-dim);margin-bottom:16px">Complete strain reference with treatment programs, testing points, and spin settings</p>`;
+
+  const catLabels = {bacteria:'Bacteria',virus:'Viruses',fungus:'Fungi/Moulds/Yeast',parasite:'Parasites',metal:'Heavy Metals',chemical:'Chemicals',food:'Foods',hormone:'Hormones',miasm:'Miasms',neurotransmitter:'Neurotransmitters',phenolic:'Phenolics',pollen:'Pollens/Allergens',vaccination:'Vaccinations'};
+
+  Object.entries(cats).forEach(([cat, items]) => {
+    html += `<div class="ref-section"><h3>${catLabels[cat]||cat} (${items.length})</h3><table class="data">
+      <tr><th>Strain</th><th>1st Tx</th><th>Follow-up</th><th>Spin</th><th>Test Points</th></tr>`;
+    items.forEach(s => {
+      html += `<tr><td><strong>${s.name}</strong>${s.kelly_notes ? `<br><em style="font-size:0.65rem;color:var(--cream-dim)">${s.kelly_notes.substring(0,60)}...</em>` : ''}</td>
+        <td><strong>${s.first_treatment_program}</strong></td><td><strong>${s.followup_treatment_program}</strong></td>
+        <td>${s.spin_tester_setting||''}</td><td style="font-size:0.65rem">${(s.eap_testing_points||[]).join(', ')}</td></tr>`;
+    });
+    html += '</table></div>';
+  });
+  main.innerHTML = html;
+}
+
+// ============================================================
+// REFERENCE TAB
+// ============================================================
+function renderReference(main) {
+  let html = '';
+
+  // Five Element
+  const fe = DB.five_element||[];
+  if (fe.length) {
+    html += `<div class="ref-section"><h3>Five Element System</h3><table class="data">
+      <tr><th>Element</th><th>Yin Organ</th><th>Yang Organ</th><th>Emotion</th><th>Season</th><th>Test Yin</th><th>Test Yang</th><th>Provoke</th></tr>`;
+    fe.forEach(e => { html += `<tr><td><strong>${e.element}</strong></td><td>${e.yin_organ}</td><td>${e.yang_organ}</td><td style="font-size:0.7rem">${e.emotion}</td><td>${e.season}</td><td><strong>${e.test_program_yin}</strong></td><td><strong>${e.test_program_yang}</strong></td><td><strong>${e.provocation_program}</strong></td></tr>`; });
+    html += '</table></div>';
+  }
+
+  // Saved Substances
+  const subs = DB.saved_substances||[];
+  const subCats = {};
+  subs.forEach(s => { if(!subCats[s.category]) subCats[s.category]=[]; subCats[s.category].push(s); });
+  html += `<div class="ref-section"><h3>Saved Substances in Optima (${subs.length})</h3>`;
+  Object.entries(subCats).forEach(([cat, items]) => {
+    html += `<div class="sub-step" onclick="toggleSub(this)"><div class="sub-hdr"><div class="dot"></div><strong>${cat}</strong> (${items.length})</div><div class="sub-body" style="columns:2;font-size:0.75rem">`;
+    items.forEach(s => { html += `${s.name}<br>`; });
+    html += '</div></div>';
+  });
+  html += '</div>';
+
+  // Acupuncture Points
+  const acu = DB.acupuncture_points||[];
+  if (acu.length) {
+    html += `<div class="ref-section"><h3>Acupuncture Points for Bioresonance (${acu.length})</h3><table class="data">
+      <tr><th>Code</th><th>Name</th><th>Meridian</th><th>Location</th><th>Bioresonance Use</th></tr>`;
+    acu.forEach(p => { html += `<tr><td><strong>${p.point_code}</strong></td><td>${p.chinese_name} (${p.english_name})</td><td>${p.meridian}</td><td style="font-size:0.68rem">${p.location}</td><td style="font-size:0.68rem">${p.bioresonance_use}</td></tr>`; });
+    html += '</table></div>';
+  }
+
+  // Nutrient Points
+  const nut = (DB.nutrient_points||[]).filter(n => n.test_program).sort((a,b)=>a.point_number.localeCompare(b.point_number));
+  if (nut.length) {
+    html += `<div class="ref-section"><h3>Nutrient Point Therapies (Sissi Karz)</h3><table class="data">
+      <tr><th>Point</th><th>Nutrient</th><th>Program</th><th>Mode</th><th>Amp</th><th>Freq</th><th>Time</th></tr>`;
+    nut.forEach(n => { html += `<tr><td>${n.point_number}</td><td><strong>${n.nutrient_name}</strong></td><td><strong>${n.test_program}</strong></td><td>${n.therapy_mode||''}</td><td>${n.amplification||''}</td><td>${n.frequency||''}</td><td>${n.time_minutes||''} min</td></tr>`; });
+    html += '</table></div>';
+  }
+
+  // Manual Images Reference
+  const imgs = DB.manual_images||[];
+  if (imgs.length) {
+    html += `<div class="ref-section"><h3>Manual Diagrams (${imgs.length} key images)</h3><table class="data"><tr><th>Image</th><th>Source</th><th>Content</th></tr>`;
+    imgs.forEach(i => { html += `<tr><td>${i.image_filename}</td><td>${i.manual_source}</td><td style="font-size:0.7rem">${i.content_description}</td></tr>`; });
+    html += '</table></div>';
+  }
+
+  main.innerHTML = html;
+}
+
+// ============================================================
+// SEARCH
+// ============================================================
+function handleSearch(q) {
+  if (!q.trim()) { render(); return; }
+  const ql = q.toLowerCase();
+  const main = document.getElementById('main');
+
+  // Search symptoms
+  const symMatches = (DB.symptoms||[]).filter(s => s.symptom.toLowerCase().includes(ql) || (s.possible_causes||[]).some(c=>c.toLowerCase().includes(ql)));
+
+  // Search programs - no limit, search name, number, description, subcategory
+  const progMatches = (DB.programs||[]).filter(p => p.program_number.includes(q) || (p.name||'').toLowerCase().includes(ql) || (p.description||'').toLowerCase().includes(ql) || (p.subcategory||'').toLowerCase().includes(ql) || (p.category||'').toLowerCase().includes(ql));
+
+  // Search strains
+  const strainMatches = (DB.strains||[]).filter(s => s.name.toLowerCase().includes(ql) || s.category.toLowerCase().includes(ql));
+
+  // Search constitutional
+  const constMatches = (DB.constitutional||[]).filter(c => c.name.toLowerCase().includes(ql) || c.category.toLowerCase().includes(ql));
+
+  // Search saved substances
+  const subMatches = (DB.saved_substances||[]).filter(s => (s.name||'').toLowerCase().includes(ql) || (s.category||'').toLowerCase().includes(ql));
+
+  const totalResults = symMatches.length + progMatches.length + strainMatches.length + constMatches.length + subMatches.length;
+  let html = `<p style="font-size:0.8rem;color:var(--cream-dim);margin-bottom:12px">${totalResults} results for "<em>${q}</em>"</p>`;
+
+  if (symMatches.length) {
+    html += `<h3 style="font-family:Cinzel,serif;color:var(--gold);margin-bottom:8px">Symptom Intelligence <span class="count-badge">${symMatches.length}</span></h3>`;
+    symMatches.forEach(s => {
+      html += `<div class="sym-result"><h3>${s.symptom}</h3>
+        <div style="margin-bottom:6px">${(s.possible_causes||[]).map(c=>`<span class="tag tag-cause">${c}</span>`).join('')}</div>
+        <div style="margin-bottom:6px">${(s.related_meridians||[]).map(m=>`<span class="tag tag-meridian">Meridian: ${m}</span>`).join('')}</div>
+        <div style="margin-bottom:6px">${(s.recommended_programs||[]).map(p=>`<span class="tag tag-prog">Pr ${p}</span>`).join('')}</div>
+        ${s.kelly_notes ? `<div class="kelly">${s.kelly_notes}</div>` : ''}
+        ${s.five_element ? `<p style="font-size:0.7rem;color:var(--cream-dim)">Five Element: ${s.five_element}</p>` : ''}
+      </div>`;
+    });
+  }
+
+  if (progMatches.length) {
+    const showProgs = progMatches.slice(0, 60);
+    html += `<h3 style="font-family:Cinzel,serif;color:var(--gold);margin:12px 0 8px">Programs <span class="count-badge">${progMatches.length}</span></h3><div class="ref-grid">`;
+    showProgs.forEach(p => {
+      html += `<div class="ref-card"><h4>${p.name||'Unnamed'}</h4><p>${p.subcategory||p.category||''} ${p.description ? ' - '+p.description.substring(0,60) : ''}</p><div class="pn">${p.program_number} ${p.therapy_mode?`<span class="prog-mode ${modeClass(p.therapy_mode)}">${p.therapy_mode}</span>`:''} ${p.time_minutes?`<span style="font-size:0.65rem;color:var(--cream-dim)">${p.time_minutes}min</span>`:''} ${p.is_optima_ldf?'<span style="font-size:0.55rem;color:var(--sage)">LDF</span>':''}</div></div>`;
+    });
+    html += '</div>';
+    if (progMatches.length > 60) html += `<p style="font-size:0.72rem;color:var(--cream-dim);text-align:center;margin-top:8px">Showing 60 of ${progMatches.length} - refine your search for more specific results</p>`;
+  }
+
+  if (strainMatches.length) {
+    html += `<h3 style="font-family:Cinzel,serif;color:var(--gold);margin:12px 0 8px">Strains <span class="count-badge">${strainMatches.length}</span></h3><table class="data"><tr><th>Strain</th><th>Category</th><th>1st Tx</th><th>Follow-up</th></tr>`;
+    strainMatches.forEach(s => { html += `<tr><td><strong>${s.name}</strong></td><td>${s.category}</td><td>${s.first_treatment_program}</td><td>${s.followup_treatment_program}</td></tr>`; });
+    html += '</table>';
+  }
+
+  if (constMatches.length) {
+    html += `<h3 style="font-family:Cinzel,serif;color:var(--gold);margin:12px 0 8px">Constitutional Support <span class="count-badge">${constMatches.length}</span></h3><table class="data"><tr><th>Condition</th><th>Category</th><th>Programs</th></tr>`;
+    constMatches.forEach(c => { html += `<tr><td><strong>${c.name}</strong></td><td>${c.category}</td><td><strong>${(c.programs||[]).join(', ')}</strong></td></tr>`; });
+    html += '</table>';
+  }
+
+  if (subMatches.length) {
+    html += `<h3 style="font-family:Cinzel,serif;color:var(--gold);margin:12px 0 8px">Saved Substances <span class="count-badge">${subMatches.length}</span></h3><table class="data"><tr><th>Substance</th><th>Category</th></tr>`;
+    subMatches.forEach(s => { html += `<tr><td><strong>${s.name}</strong></td><td>${s.category||''}</td></tr>`; });
+    html += '</table>';
+  }
+
+  if (totalResults === 0) {
+    html += '<p style="text-align:center;padding:40px;color:var(--cream-dim)">No results found. Try a different search term.</p>';
+  }
+
+  main.innerHTML = html;
+}
+
+// Auth - Email whitelist, instant access
+const ALLOWED_EMAILS = [
+  'kane@peaceofeden.com.au',
+  'kelly.wotherspoon@peaceofeden.com.au',
+  'megsfield@gmail.com'
+];
+
+function checkEmail() {
+  const email = document.getElementById('authEmail').value.trim().toLowerCase();
+  if (!email) { showAuthError('Please enter your email'); return; }
+  if (!ALLOWED_EMAILS.includes(email)) { showAuthError('This email is not authorised for access'); return; }
+  localStorage.setItem('bicom_user', email);
+  unlockApp();
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function unlockApp() {
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('appContainer').style.display = 'block';
+  loadDB();
+}
+
+// Auto-login if previously authenticated
+const savedUser = localStorage.getItem('bicom_user');
+if (savedUser && ALLOWED_EMAILS.includes(savedUser)) { unlockApp(); }
+
+</script>
+</div><!-- /appContainer -->
+</body>
+</html>
