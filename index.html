@@ -136,9 +136,39 @@
     .load-more{display:block;width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-family:inherit;font-size:0.78rem;color:var(--gold);cursor:pointer;text-align:center;margin-top:8px}
     .load-more:hover{border-color:var(--gold);background:var(--gold-dim)}
 
+    /* AI Assistant */
+    .ai-fab{position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--gold);color:white;border:none;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 16px rgba(139,111,71,0.35);z-index:100;display:flex;align-items:center;justify-content:center;transition:transform 0.2s}
+    .ai-fab:hover{transform:scale(1.08)}
+    .ai-panel{position:fixed;bottom:80px;right:20px;width:360px;max-height:520px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.12);z-index:99;display:none;flex-direction:column;overflow:hidden}
+    .ai-panel.open{display:flex}
+    .ai-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+    .ai-header h3{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);flex:1}
+    .ai-close{background:none;border:none;font-size:1.1rem;color:var(--cream-dim);cursor:pointer}
+    .ai-messages{flex:1;overflow-y:auto;padding:12px 16px;max-height:380px}
+    .ai-msg{margin-bottom:10px;font-size:0.78rem;line-height:1.6}
+    .ai-msg.bot{background:var(--bg);border-radius:10px 10px 10px 2px;padding:10px 14px}
+    .ai-msg.user{background:var(--gold);color:white;border-radius:10px 10px 2px 10px;padding:8px 14px;margin-left:40px}
+    .ai-msg .ai-results{margin-top:8px}
+    .ai-msg .ai-results .prog{margin:4px 0;padding:6px 8px;font-size:0.72rem}
+    .ai-input-row{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:6px}
+    .ai-input-row input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.78rem;background:var(--bg);color:var(--cream)}
+    .ai-input-row input:focus{outline:none;border-color:var(--gold)}
+    .ai-input-row button{padding:8px 14px;border:none;border-radius:8px;background:var(--gold);color:white;font-family:inherit;font-size:0.72rem;cursor:pointer}
+
+    /* Help tab */
+    .help-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px}
+    .help-section h3{font-family:'Cinzel',serif;font-size:0.9rem;color:var(--gold);margin-bottom:10px}
+    .help-section p,.help-section li{font-size:0.8rem;line-height:1.7}
+    .help-section ul{list-style:none;padding:0}.help-section ul li{padding:4px 0 4px 16px;position:relative}
+    .help-section ul li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);position:absolute;left:0;top:12px}
+    .help-video{background:linear-gradient(135deg,rgba(139,111,71,0.08),rgba(139,111,71,0.03));border:2px dashed var(--gold-dim);border-radius:12px;padding:30px;text-align:center;margin-bottom:14px}
+    .help-video h3{font-family:'Cinzel',serif;font-size:0.9rem;color:var(--gold);margin-bottom:6px}
+
     @media(max-width:768px){
       .header-row{flex-direction:column;align-items:stretch}.tabs{align-self:center}
-      main{padding:10px 10px 60px}.ref-grid{grid-template-columns:1fr 1fr}
+      main{padding:10px 10px 80px}.ref-grid{grid-template-columns:1fr 1fr}
+      .ai-panel{width:calc(100% - 24px);right:12px;bottom:74px;max-height:70vh}
+      .ai-fab{bottom:14px;right:14px;width:48px;height:48px}
     }
   </style>
 </head>
@@ -171,6 +201,7 @@
       <button class="tab" onclick="setMode('protocols')">Protocols</button>
       <button class="tab" onclick="setMode('strains')">Strains</button>
       <button class="tab" onclick="setMode('reference')">Reference</button>
+      <button class="tab" onclick="setMode('help')">Help</button>
     </div>
   </div>
 </header>
@@ -263,6 +294,7 @@ function render() {
   else if (mode === 'programs') renderPrograms(main);
   else if (mode === 'protocols') renderProtocols(main);
   else if (mode === 'strains') renderStrains(main);
+  else if (mode === 'help') renderHelp(main);
   else renderReference(main);
 }
 
@@ -849,7 +881,215 @@ function unlockApp() {
 const savedUser = localStorage.getItem('bicom_user');
 if (savedUser && ALLOWED_EMAILS.includes(savedUser)) { unlockApp(); }
 
+// ============================================================
+// HELP TAB
+// ============================================================
+function renderHelp(main) {
+  let html = `
+    <div class="help-video">
+      <h3>Watch the Intro</h3>
+      <p style="font-size:0.78rem;color:var(--cream-dim);margin-bottom:12px">Kelly walks you through the app in 2 minutes</p>
+      <p style="font-size:0.72rem;color:var(--cream-dim);font-style:italic">Video coming soon</p>
+    </div>
+
+    <div class="help-section">
+      <h3>What is this app?</h3>
+      <p>This is a complete clinical reference for the <strong>BICOM Optima</strong> bioresonance machine. It contains <strong>1,533 treatment programs</strong>, strain protocols, constitutional support data, and a step-by-step session guide - all extracted from the Regumed clinical manual.</p>
+    </div>
+
+    <div class="help-section">
+      <h3>The Tabs</h3>
+      <ul>
+        <li><strong>Guide</strong> - Follow this during a session. 13 steps from client setup through session close. Tap each step to expand it. It tells you which programs to run, which electrodes to place, and how to interpret readings.</li>
+        <li><strong>Programs</strong> - Browse all 1,533 programs. Filter by category (Basic, Blockage, Strain, etc.), subcategory (cardiovascular, dental, etc.), or letter. Each card shows the program number, therapy mode (H, Di, H+Di, A, Ai), and time.</li>
+        <li><strong>Protocols</strong> - Multi-step treatment sequences. When a condition needs 2-6 programs run in order, they are grouped here. Search by condition name.</li>
+        <li><strong>Strains</strong> - What is making the client unwell. Shows the first treatment program and follow-up program for each strain type (bacteria, virus, metals, chemicals, etc.).</li>
+        <li><strong>Reference</strong> - Five Element system, saved substances in the Optima, acupuncture points for bioresonance, nutrient point therapies.</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>How to Search</h3>
+      <p>The search bar at the top searches <strong>everything</strong> - programs, strains, symptoms, constitutional support, and saved substances. Try searching:</p>
+      <ul>
+        <li><strong>"liver"</strong> - finds liver programs, liver detox, liver meridian treatments</li>
+        <li><strong>"530"</strong> - finds program 530 and all its variants</li>
+        <li><strong>"knee"</strong> - finds knee pain, knee joint, knee arthrosis programs</li>
+        <li><strong>"candida"</strong> - finds candida strains and treatment programs</li>
+        <li><strong>"headache"</strong> - finds symptom intelligence with causes, meridians, and recommended programs</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>Therapy Modes Explained</h3>
+      <ul>
+        <li><span class="prog-mode m-h" style="font-size:0.65rem">H</span> <strong>Harmonious</strong> - Returns healthy signals. For exhausted/depleted clients.</li>
+        <li><span class="prog-mode m-di" style="font-size:0.65rem">Di</span> <strong>Disharmonious inverted</strong> - Inverts pathological signals. For infections.</li>
+        <li><span class="prog-mode m-hdi" style="font-size:0.65rem">H+Di</span> <strong>Both</strong> - Returns healthy AND inverts pathological. Most common. For allergies.</li>
+        <li><span class="prog-mode m-a" style="font-size:0.65rem">A</span> <strong>All signals</strong> - Amplifies beneficial substances. For provocation.</li>
+        <li><span class="prog-mode m-ai" style="font-size:0.65rem">Ai</span> <strong>All inverted</strong> - Inverts foreign substances (moulds, chemicals, viruses).</li>
+      </ul>
+      <p style="margin-top:8px">Programs marked <span style="font-size:0.55rem;color:var(--sage);font-weight:600">LDF</span> are Optima-only Low Deep Frequency programs (3xxx range). Always run the LDF program first, then the standard program.</p>
+    </div>
+
+    <div class="help-section">
+      <h3>Session Flow (Quick Reference)</h3>
+      <ul>
+        <li><strong>1.</strong> Remove metals, set up client on modulation mat</li>
+        <li><strong>2.</strong> Take conductance reading (ideal: 80-86)</li>
+        <li><strong>3.</strong> Run basic therapy based on conductance</li>
+        <li><strong>4.</strong> Test hypothalamus and quadrants</li>
+        <li><strong>5.</strong> Check meridians</li>
+        <li><strong>6.</strong> Test and treat blockages (ALWAYS FIRST)</li>
+        <li><strong>7.</strong> Test strains on 1191, treat on 998/977/978/979 (max 6 per session)</li>
+        <li><strong>8.</strong> Constitutional support for weakened organs</li>
+        <li><strong>9.</strong> Detox (ALWAYS - at least one program per session)</li>
+        <li><strong>10.</strong> Give output cup contents, book follow-up</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>The AI Assistant</h3>
+      <p>Tap the gold circle button in the bottom-right corner to open the assistant. Ask it questions like "what programs treat knee pain?" or "how do I treat candida?" and it will search the database for you.</p>
+    </div>
+
+    <div class="help-section" style="border-left:4px solid var(--gold)">
+      <h3>Need Help?</h3>
+      <p>Contact Kelly at kelly.wotherspoon@peaceofeden.com.au</p>
+    </div>`;
+
+  main.innerHTML = html;
+}
+
+// ============================================================
+// AI ASSISTANT
+// ============================================================
+let aiOpen = false;
+let aiMessages = [
+  { role:'bot', text:'Hi! I can help you find programs, protocols, and treatment info. Try asking me things like:<br><br>- "What treats knee pain?"<br>- "Show me liver detox programs"<br>- "How do I treat candida?"<br>- "What is program 530?"' }
+];
+
+function toggleAI() {
+  aiOpen = !aiOpen;
+  document.getElementById('aiPanel').classList.toggle('open', aiOpen);
+  if (aiOpen) document.getElementById('aiInput').focus();
+}
+
+function renderAIMessages() {
+  const el = document.getElementById('aiMessages');
+  el.innerHTML = aiMessages.map(m => `<div class="ai-msg ${m.role}">${m.text}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function aiSend() {
+  const input = document.getElementById('aiInput');
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+
+  aiMessages.push({ role:'user', text: q });
+  renderAIMessages();
+
+  // Process query
+  const ql = q.toLowerCase();
+  let response = '';
+
+  // Search programs
+  const progMatches = (DB.programs||[]).filter(p =>
+    (p.name||'').toLowerCase().includes(ql) ||
+    p.program_number.includes(q) ||
+    (p.description||'').toLowerCase().includes(ql) ||
+    (p.subcategory||'').toLowerCase().includes(ql)
+  ).slice(0, 8);
+
+  // Search strains
+  const strainMatches = (DB.strains||[]).filter(s =>
+    s.name.toLowerCase().includes(ql) || s.category.toLowerCase().includes(ql)
+  ).slice(0, 5);
+
+  // Search constitutional
+  const constMatches = (DB.constitutional||[]).filter(c =>
+    c.name.toLowerCase().includes(ql) || c.category.toLowerCase().includes(ql)
+  ).slice(0, 5);
+
+  // Search symptoms
+  const symMatches = (DB.symptoms||[]).filter(s =>
+    s.symptom.toLowerCase().includes(ql) || (s.possible_causes||[]).some(c=>c.toLowerCase().includes(ql))
+  );
+
+  if (symMatches.length) {
+    response += '<strong>Symptom Intelligence:</strong><br>';
+    symMatches.forEach(s => {
+      response += `<strong>${s.symptom}</strong><br>`;
+      if (s.possible_causes) response += 'Causes: ' + s.possible_causes.join(', ') + '<br>';
+      if (s.recommended_programs) response += 'Programs: <strong>' + s.recommended_programs.join(', ') + '</strong><br>';
+      if (s.kelly_notes) response += '<em>' + s.kelly_notes + '</em><br>';
+    });
+    response += '<br>';
+  }
+
+  if (progMatches.length) {
+    response += `<strong>${progMatches.length} programs found:</strong><div class="ai-results">`;
+    progMatches.forEach(p => {
+      response += `<div class="prog"><div class="prog-num">${p.program_number}</div><div class="prog-info">${p.name||''}${p.subcategory ? '<span>'+p.subcategory+'</span>':''}</div>${p.therapy_mode?'<span class="prog-mode '+modeClass(p.therapy_mode)+'">'+p.therapy_mode+'</span>':''}</div>`;
+    });
+    response += '</div>';
+  }
+
+  if (strainMatches.length) {
+    response += '<strong>Strains:</strong><br>';
+    strainMatches.forEach(s => {
+      response += `${s.name} (${s.category}) - 1st: <strong>${s.first_treatment_program}</strong>, follow-up: <strong>${s.followup_treatment_program}</strong><br>`;
+    });
+    response += '<br>';
+  }
+
+  if (constMatches.length) {
+    response += '<strong>Constitutional Support:</strong><br>';
+    constMatches.forEach(c => {
+      response += `${c.name} - Programs: <strong>${(c.programs||[]).join(', ')}</strong><br>`;
+    });
+  }
+
+  if (!response) {
+    // Try looser search - split words
+    const words = ql.split(/\s+/).filter(w => w.length > 2);
+    const looseMatches = (DB.programs||[]).filter(p =>
+      words.some(w => (p.name||'').toLowerCase().includes(w) || (p.subcategory||'').toLowerCase().includes(w))
+    ).slice(0, 6);
+
+    if (looseMatches.length) {
+      response = `I found some related programs:<div class="ai-results">`;
+      looseMatches.forEach(p => {
+        response += `<div class="prog"><div class="prog-num">${p.program_number}</div><div class="prog-info">${p.name||''}<span>${p.subcategory||''}</span></div>${p.therapy_mode?'<span class="prog-mode '+modeClass(p.therapy_mode)+'">'+p.therapy_mode+'</span>':''}</div>`;
+      });
+      response += '</div>';
+    } else {
+      response = "I couldn't find anything for that query. Try searching for a condition (e.g. 'knee'), a program number (e.g. '530'), or a strain type (e.g. 'candida').";
+    }
+  }
+
+  aiMessages.push({ role:'bot', text: response });
+  renderAIMessages();
+}
+
 </script>
+
+<!-- AI Assistant FAB + Panel -->
+<button class="ai-fab" onclick="toggleAI()" title="AI Assistant">&#9672;</button>
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-header">
+    <h3>Clinical Assistant</h3>
+    <button class="ai-close" onclick="toggleAI()">&#10005;</button>
+  </div>
+  <div class="ai-messages" id="aiMessages"></div>
+  <div class="ai-input-row">
+    <input type="text" id="aiInput" placeholder="Ask about programs, conditions..." onkeydown="if(event.key==='Enter')aiSend()">
+    <button onclick="aiSend()">Ask</button>
+  </div>
+</div>
+<script>renderAIMessages();</script>
+
 </div><!-- /appContainer -->
 </body>
 </html>
