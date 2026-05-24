@@ -136,6 +136,25 @@
     .load-more{display:block;width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-family:inherit;font-size:0.78rem;color:var(--gold);cursor:pointer;text-align:center;margin-top:8px}
     .load-more:hover{border-color:var(--gold);background:var(--gold-dim)}
 
+    /* KW Badge & Voice Recorder */
+    .kw-badge{display:inline-block;padding:1px 5px;border-radius:4px;font-size:0.55rem;font-weight:700;background:linear-gradient(135deg,#8b6f47,#c4a265);color:white;letter-spacing:1px;margin-left:4px;vertical-align:middle}
+    .voice-btn{width:48px;height:48px;border-radius:50%;border:2px solid var(--gold);background:var(--surface);color:var(--gold);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s}
+    .voice-btn.recording{background:var(--detrimental);border-color:var(--detrimental);color:white;animation:pulse 1.5s infinite}
+    .voice-btn:hover{transform:scale(1.05)}
+    .protocol-entry{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;border-left:4px solid #c4a265}
+    .protocol-entry .meta{font-size:0.65rem;color:var(--cream-dim);margin-top:6px}
+    .protocol-entry .actions{display:flex;gap:6px;margin-top:8px}
+    .protocol-entry .actions button{padding:4px 10px;border-radius:6px;font-size:0.68rem;cursor:pointer;font-family:inherit;border:1px solid var(--border)}
+    .protocol-entry .actions .approve{background:var(--beneficial);color:white;border-color:var(--beneficial)}
+    .protocol-entry .actions .delete{background:transparent;color:var(--detrimental);border-color:var(--detrimental)}
+    .status-pending{color:var(--confused)}.status-approved{color:var(--beneficial)}
+    .voice-area{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;text-align:center}
+    .voice-area textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.8rem;min-height:80px;resize:vertical;background:var(--bg);color:var(--cream);margin-top:10px}
+    .voice-area textarea:focus{outline:none;border-color:var(--gold)}
+    .tag-input{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+    .tag-input input,.tag-input select{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.75rem;background:var(--bg);color:var(--cream)}
+    .tag-input input:focus,.tag-input select:focus{outline:none;border-color:var(--gold)}
+
     /* AI Assistant */
     .ai-fab{position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--gold);color:white;border:none;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 16px rgba(139,111,71,0.35);z-index:100;display:flex;align-items:center;justify-content:center;transition:transform 0.2s}
     .ai-fab:hover{transform:scale(1.08)}
@@ -201,6 +220,7 @@
       <button class="tab" onclick="setMode('protocols')">Protocols</button>
       <button class="tab" onclick="setMode('strains')">Strains</button>
       <button class="tab" onclick="setMode('reference')">Reference</button>
+      <button class="tab kw-only" onclick="setMode('myprotocols')" style="display:none">My Protocols</button>
       <button class="tab" onclick="setMode('help')">Help</button>
     </div>
   </div>
@@ -228,6 +248,13 @@ async function loadDB() {
   // Fetch remaining programs (batch 2)
   const batch2 = await sb.from('bio_programs').select('*').range(1000, 2000);
   if (batch2.data && batch2.data.length) DB.programs = DB.programs.concat(batch2.data);
+  // Load Kelly's protocols
+  const kp = await sb.from('bio_kelly_protocols').select('*').order('created_at', { ascending: false });
+  DB.kelly_protocols = kp.data || [];
+  // Show role-based tabs
+  if (currentRole === 'admin' || currentRole === 'practitioner') {
+    document.querySelectorAll('.kw-only').forEach(el => el.style.display = '');
+  }
   render();
 }
 
@@ -294,6 +321,7 @@ function render() {
   else if (mode === 'programs') renderPrograms(main);
   else if (mode === 'protocols') renderProtocols(main);
   else if (mode === 'strains') renderStrains(main);
+  else if (mode === 'myprotocols') renderMyProtocols(main);
   else if (mode === 'help') renderHelp(main);
   else renderReference(main);
 }
@@ -855,18 +883,23 @@ function handleSearch(q) {
 }
 
 // Auth - Email whitelist, instant access
-const ALLOWED_EMAILS = [
-  'kane@peaceofeden.com.au',
-  'kelly.wotherspoon@peaceofeden.com.au',
-  'megsfield@gmail.com',
-  'leanne@milimo.com.au'
-];
+const USER_ROLES = {
+  'kelly.wotherspoon@peaceofeden.com.au': 'admin',
+  'kane@peaceofeden.com.au': 'practitioner',
+  'megsfield@gmail.com': 'viewer',
+  'leanne@milimo.com.au': 'viewer'
+};
+const ALLOWED_EMAILS = Object.keys(USER_ROLES);
+let currentRole = 'viewer';
+let currentEmail = '';
 
 function checkEmail() {
   const email = document.getElementById('authEmail').value.trim().toLowerCase();
   if (!email) { showAuthError('Please enter your email'); return; }
   if (!ALLOWED_EMAILS.includes(email)) { showAuthError('This email is not authorised for access'); return; }
   localStorage.setItem('bicom_user', email);
+  currentEmail = email;
+  currentRole = USER_ROLES[email] || 'viewer';
   unlockApp();
 }
 
@@ -883,7 +916,183 @@ function unlockApp() {
 
 // Auto-login if previously authenticated
 const savedUser = localStorage.getItem('bicom_user');
-if (savedUser && ALLOWED_EMAILS.includes(savedUser)) { unlockApp(); }
+if (savedUser && ALLOWED_EMAILS.includes(savedUser)) {
+  currentEmail = savedUser;
+  currentRole = USER_ROLES[savedUser] || 'viewer';
+  unlockApp();
+}
+
+// ============================================================
+// MY PROTOCOLS TAB (Admin + Practitioner)
+// ============================================================
+let isRecording = false;
+let recognition = null;
+
+function renderMyProtocols(main) {
+  const protocols = DB.kelly_protocols || [];
+  const isAdmin = currentRole === 'admin';
+  const pending = protocols.filter(p => p.status === 'pending');
+  const approved = protocols.filter(p => p.status === 'approved');
+
+  let html = `<h2 style="font-family:Cinzel,serif;color:var(--gold);margin-bottom:4px">${isAdmin ? "Kelly's Protocols" : 'Session Notes'}</h2>
+    <p style="font-size:0.75rem;color:var(--cream-dim);margin-bottom:16px">${isAdmin ? 'Voice-record clinical insights during sessions. They show up as KW-tagged notes throughout the app.' : 'Add questions and observations during sessions. Kelly will review them.'}</p>`;
+
+  // Voice recorder
+  html += `<div class="voice-area">
+    <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">&#127908;</button>
+    <p id="voiceStatus" style="font-size:0.72rem;color:var(--cream-dim);margin-top:8px">Tap to start recording</p>
+    <textarea id="protoText" placeholder="${isAdmin ? 'Speak or type your protocol note...' : 'Type your question or observation...'}"></textarea>
+    <div class="tag-input">
+      <input type="text" id="protoProgram" placeholder="Program # (optional)" style="width:100px">
+      <input type="text" id="protoCondition" placeholder="Condition (optional)" style="flex:1">
+      <select id="protoCategory">
+        <option value="">Category...</option>
+        <option value="blockage">Blockage</option>
+        <option value="strain">Strain</option>
+        <option value="constitutional">Constitutional</option>
+        <option value="detox">Detox</option>
+        <option value="energy">Energy</option>
+        <option value="emotional">Emotional</option>
+        <option value="tip">Clinical Tip</option>
+        <option value="question">Question</option>
+      </select>
+      <button class="btn" onclick="saveProtocol()">Save</button>
+    </div>
+  </div>`;
+
+  // Pending (admin sees all, practitioner sees own)
+  if (pending.length) {
+    html += `<h3 style="font-family:Cinzel,serif;color:var(--confused);margin-bottom:8px">Pending Review <span class="count-badge">${pending.length}</span></h3>`;
+    pending.forEach(p => {
+      html += `<div class="protocol-entry">
+        <p style="font-size:0.82rem">${p.transcription}</p>
+        <div class="meta">
+          ${p.related_program ? '<strong>Program:</strong> ' + p.related_program + ' | ' : ''}
+          ${p.related_condition ? '<strong>Condition:</strong> ' + p.related_condition + ' | ' : ''}
+          ${p.category ? '<span class="tag tag-cause">' + p.category + '</span> ' : ''}
+          Added by ${p.added_by} - ${new Date(p.created_at).toLocaleDateString()}
+        </div>
+        ${isAdmin ? `<div class="actions">
+          <button class="approve" onclick="approveProtocol(${p.id})">Approve</button>
+          <button class="delete" onclick="deleteProtocol(${p.id})">Delete</button>
+        </div>` : ''}
+      </div>`;
+    });
+  }
+
+  // Approved
+  if (approved.length) {
+    html += `<h3 style="font-family:Cinzel,serif;color:var(--beneficial);margin:16px 0 8px">Approved <span class="kw-badge">KW</span> <span class="count-badge">${approved.length}</span></h3>`;
+    approved.forEach(p => {
+      html += `<div class="protocol-entry" style="border-left-color:var(--beneficial)">
+        <p style="font-size:0.82rem">${p.transcription}</p>
+        <div class="meta">
+          ${p.related_program ? '<strong>Program:</strong> ' + p.related_program + ' | ' : ''}
+          ${p.related_condition ? '<strong>Condition:</strong> ' + p.related_condition + ' | ' : ''}
+          ${p.category ? '<span class="tag tag-cause">' + p.category + '</span>' : ''}
+        </div>
+      </div>`;
+    });
+  }
+
+  if (!pending.length && !approved.length) {
+    html += '<p style="text-align:center;padding:40px;color:var(--cream-dim)">No protocols yet. Start recording during your next session.</p>';
+  }
+
+  main.innerHTML = html;
+}
+
+function toggleVoice() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    document.getElementById('voiceStatus').textContent = 'Voice not supported on this browser. Use Chrome or Safari.';
+    return;
+  }
+
+  if (isRecording) {
+    recognition.stop();
+    isRecording = false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+    document.getElementById('voiceStatus').textContent = 'Recording stopped. Edit below then save.';
+    return;
+  }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-AU';
+
+  let finalText = document.getElementById('protoText').value;
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        finalText += e.results[i][0].transcript + ' ';
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    document.getElementById('protoText').value = finalText + interim;
+  };
+
+  recognition.onerror = (e) => {
+    document.getElementById('voiceStatus').textContent = 'Error: ' + e.error + '. Try again.';
+    isRecording = false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+  };
+
+  recognition.onend = () => {
+    if (isRecording) recognition.start(); // keep going if not manually stopped
+  };
+
+  recognition.start();
+  isRecording = true;
+  document.getElementById('voiceBtn').classList.add('recording');
+  document.getElementById('voiceStatus').textContent = 'Listening... tap again to stop';
+}
+
+async function saveProtocol() {
+  const text = document.getElementById('protoText').value.trim();
+  if (!text) return;
+
+  const entry = {
+    transcription: text,
+    related_program: document.getElementById('protoProgram').value.trim() || null,
+    related_condition: document.getElementById('protoCondition').value.trim() || null,
+    category: document.getElementById('protoCategory').value || null,
+    added_by: currentEmail,
+    role: currentRole,
+    status: currentRole === 'admin' ? 'approved' : 'pending'
+  };
+
+  const { error } = await sb.from('bio_kelly_protocols').insert(entry);
+  if (error) { alert('Error saving: ' + error.message); return; }
+
+  // Reload
+  const kp = await sb.from('bio_kelly_protocols').select('*').order('created_at', { ascending: false });
+  DB.kelly_protocols = kp.data || [];
+
+  document.getElementById('protoText').value = '';
+  document.getElementById('protoProgram').value = '';
+  document.getElementById('protoCondition').value = '';
+  document.getElementById('protoCategory').value = '';
+  render();
+}
+
+async function approveProtocol(id) {
+  await sb.from('bio_kelly_protocols').update({ status: 'approved' }).eq('id', id);
+  const kp = await sb.from('bio_kelly_protocols').select('*').order('created_at', { ascending: false });
+  DB.kelly_protocols = kp.data || [];
+  render();
+}
+
+async function deleteProtocol(id) {
+  await sb.from('bio_kelly_protocols').delete().eq('id', id);
+  const kp = await sb.from('bio_kelly_protocols').select('*').order('created_at', { ascending: false });
+  DB.kelly_protocols = kp.data || [];
+  render();
+}
 
 // ============================================================
 // HELP TAB
