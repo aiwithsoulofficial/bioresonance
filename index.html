@@ -989,8 +989,13 @@ function renderMyProtocols(main) {
         <div class="meta">
           ${p.related_program ? '<strong>Program:</strong> ' + p.related_program + ' | ' : ''}
           ${p.related_condition ? '<strong>Condition:</strong> ' + p.related_condition + ' | ' : ''}
-          ${p.category ? '<span class="tag tag-cause">' + p.category + '</span>' : ''}
+          ${p.category ? '<span class="tag tag-cause">' + p.category + '</span> ' : ''}
+          ${p.incorporated ? '<span class="tag" style="background:rgba(58,138,74,0.15);color:var(--beneficial)">Incorporated</span>' : ''}
         </div>
+        ${isAdmin && !p.incorporated ? `<div class="actions">
+          <button class="approve" onclick="incorporateProtocol(${p.id})">Incorporate into Database</button>
+          <button class="delete" onclick="deleteProtocol(${p.id})">Delete</button>
+        </div>` : ''}
       </div>`;
     });
   }
@@ -1085,6 +1090,40 @@ async function approveProtocol(id) {
   const kp = await sb.from('bio_kelly_protocols').select('*').order('created_at', { ascending: false });
   DB.kelly_protocols = kp.data || [];
   render();
+}
+
+async function incorporateProtocol(id) {
+  const btn = event.target;
+  btn.textContent = 'Incorporating...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/clinic-assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ action: 'incorporate', protocolId: id })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      alert('Done! ' + (data.summary || 'Protocol incorporated into the database.'));
+      // Reload protocols AND programs
+      const kp = await sb.from('bio_kelly_protocols').select('*').order('created_at', { ascending: false });
+      DB.kelly_protocols = kp.data || [];
+      const p1 = await sb.from('bio_programs').select('*').limit(1000);
+      const p2 = await sb.from('bio_programs').select('*').range(1000, 2000);
+      DB.programs = [...(p1.data||[]), ...(p2.data||[])];
+      render();
+    } else {
+      alert('Error: ' + (data.error || 'Something went wrong'));
+      btn.textContent = 'Incorporate into Database';
+      btn.disabled = false;
+    }
+  } catch (err) {
+    alert('Connection error: ' + err.message);
+    btn.textContent = 'Incorporate into Database';
+    btn.disabled = false;
+  }
 }
 
 async function deleteProtocol(id) {
@@ -1194,95 +1233,41 @@ function renderAIMessages() {
   el.scrollTop = el.scrollHeight;
 }
 
-function aiSend() {
+async function aiSend() {
   const input = document.getElementById('aiInput');
   const q = input.value.trim();
   if (!q) return;
   input.value = '';
 
   aiMessages.push({ role:'user', text: q });
+  aiMessages.push({ role:'bot', text: '<em style="color:var(--cream-dim)">Thinking...</em>' });
   renderAIMessages();
 
-  // Process query
-  const ql = q.toLowerCase();
-  let response = '';
-
-  // Search programs
-  const progMatches = (DB.programs||[]).filter(p =>
-    (p.name||'').toLowerCase().includes(ql) ||
-    p.program_number.includes(q) ||
-    (p.description||'').toLowerCase().includes(ql) ||
-    (p.subcategory||'').toLowerCase().includes(ql)
-  ).slice(0, 8);
-
-  // Search strains
-  const strainMatches = (DB.strains||[]).filter(s =>
-    s.name.toLowerCase().includes(ql) || s.category.toLowerCase().includes(ql)
-  ).slice(0, 5);
-
-  // Search constitutional
-  const constMatches = (DB.constitutional||[]).filter(c =>
-    c.name.toLowerCase().includes(ql) || c.category.toLowerCase().includes(ql)
-  ).slice(0, 5);
-
-  // Search symptoms
-  const symMatches = (DB.symptoms||[]).filter(s =>
-    s.symptom.toLowerCase().includes(ql) || (s.possible_causes||[]).some(c=>c.toLowerCase().includes(ql))
-  );
-
-  if (symMatches.length) {
-    response += '<strong>Symptom Intelligence:</strong><br>';
-    symMatches.forEach(s => {
-      response += `<strong>${s.symptom}</strong><br>`;
-      if (s.possible_causes) response += 'Causes: ' + s.possible_causes.join(', ') + '<br>';
-      if (s.recommended_programs) response += 'Programs: <strong>' + s.recommended_programs.join(', ') + '</strong><br>';
-      if (s.kelly_notes) response += '<em>' + s.kelly_notes + '</em><br>';
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/clinic-assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ question: q, userEmail: currentEmail })
     });
-    response += '<br>';
-  }
+    const data = await res.json();
 
-  if (progMatches.length) {
-    response += `<strong>${progMatches.length} programs found:</strong><div class="ai-results">`;
-    progMatches.forEach(p => {
-      response += `<div class="prog"><div class="prog-num">${p.program_number}</div><div class="prog-info">${p.name||''}${p.subcategory ? '<span>'+p.subcategory+'</span>':''}</div>${p.therapy_mode?'<span class="prog-mode '+modeClass(p.therapy_mode)+'">'+p.therapy_mode+'</span>':''}</div>`;
-    });
-    response += '</div>';
-  }
+    // Remove "Thinking..." message
+    aiMessages.pop();
 
-  if (strainMatches.length) {
-    response += '<strong>Strains:</strong><br>';
-    strainMatches.forEach(s => {
-      response += `${s.name} (${s.category}) - 1st: <strong>${s.first_treatment_program}</strong>, follow-up: <strong>${s.followup_treatment_program}</strong><br>`;
-    });
-    response += '<br>';
-  }
-
-  if (constMatches.length) {
-    response += '<strong>Constitutional Support:</strong><br>';
-    constMatches.forEach(c => {
-      response += `${c.name} - Programs: <strong>${(c.programs||[]).join(', ')}</strong><br>`;
-    });
-  }
-
-  if (!response) {
-    // Try looser search - split words
-    const words = ql.split(/\s+/).filter(w => w.length > 2);
-    const looseMatches = (DB.programs||[]).filter(p =>
-      words.some(w => (p.name||'').toLowerCase().includes(w) || (p.subcategory||'').toLowerCase().includes(w))
-    ).slice(0, 6);
-
-    if (looseMatches.length) {
-      response = `I found some related programs:<div class="ai-results">`;
-      looseMatches.forEach(p => {
-        response += `<div class="prog"><div class="prog-num">${p.program_number}</div><div class="prog-info">${p.name||''}<span>${p.subcategory||''}</span></div>${p.therapy_mode?'<span class="prog-mode '+modeClass(p.therapy_mode)+'">'+p.therapy_mode+'</span>':''}</div>`;
-      });
-      response += '</div>';
+    if (data.error) {
+      aiMessages.push({ role:'bot', text: 'Sorry, something went wrong: ' + data.error });
     } else {
-      response = "I couldn't find anything for that query. Try searching for a condition (e.g. 'knee'), a program number (e.g. '530'), or a strain type (e.g. 'candida').";
+      let answer = data.answer.replace(/\n/g, '<br>');
+      if (data.escalated) {
+        answer += '<br><br><em style="color:var(--confused)">This question has been flagged for Kelly to review.</em>';
+      }
+      aiMessages.push({ role:'bot', text: answer });
     }
+  } catch (err) {
+    aiMessages.pop();
+    aiMessages.push({ role:'bot', text: 'Connection error. Check your internet and try again.' });
   }
 
-  aiMessages.push({ role:'bot', text: response });
   renderAIMessages();
 }
 
