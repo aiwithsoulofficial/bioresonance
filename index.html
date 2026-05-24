@@ -765,12 +765,16 @@ function renderReference(main) {
     html += '</table></div>';
   }
 
-  // Manual Images Reference
+  // Manual Images Reference - with actual diagrams
   const imgs = DB.manual_images||[];
   if (imgs.length) {
-    html += `<div class="ref-section"><h3>Manual Diagrams (${imgs.length} key images)</h3><table class="data"><tr><th>Image</th><th>Source</th><th>Content</th></tr>`;
-    imgs.forEach(i => { html += `<tr><td>${i.image_filename}</td><td>${i.manual_source}</td><td style="font-size:0.7rem">${i.content_description}</td></tr>`; });
-    html += '</table></div>';
+    html += `<div class="ref-section"><h3>Manual Diagrams (${imgs.length} key images)</h3><p style="font-size:0.72rem;color:var(--cream-dim);margin-bottom:12px">Tap any diagram to expand. These are the critical reference images from the Pitman Practice Manual, Advanced Training, and Regumed Optima Manual.</p>`;
+    imgs.forEach(i => {
+      const fname = i.image_filename.replace('.JPG','.jpg');
+      const sourceLabel = i.manual_source === 'pitman_practice' ? 'Practice Manual' : i.manual_source === 'pitman_advanced' ? 'Advanced Training' : 'Regumed Optima';
+      html += `<div class="sub-step" onclick="toggleSub(this)"><div class="sub-hdr"><div class="dot"></div><strong>${i.content_description}</strong> <span class="count-badge">${sourceLabel}</span></div><div class="sub-body" style="text-align:center"><img src="diagrams/${fname}" alt="${i.content_description}" style="max-width:100%;border-radius:8px;border:1px solid var(--border);cursor:zoom-in" onclick="event.stopPropagation();window.open('diagrams/${fname}','_blank')"><p style="font-size:0.65rem;color:var(--cream-dim);margin-top:6px">${i.image_filename} - ${sourceLabel}</p></div></div>`;
+    });
+    html += '</div>';
   }
 
   main.innerHTML = html;
@@ -966,7 +970,7 @@ function renderHelp(main) {
 // ============================================================
 let aiOpen = false;
 let aiMessages = [
-  { role:'bot', text:'Hi! I can help you find programs, protocols, and treatment info. Try asking me things like:<br><br>- "What treats knee pain?"<br>- "Show me liver detox programs"<br>- "How do I treat candida?"<br>- "What is program 530?"' }
+  { role:'bot', text:'Hey! I\'m your Clinic Assistant. Just type what you\'re looking for and I\'ll find it for you.<br><br>Try things like:<br>- <strong>knee pain</strong><br>- <strong>liver detox</strong><br>- <strong>candida</strong><br>- <strong>530</strong> (any program number)<br>- <strong>headache</strong>' }
 ];
 
 function toggleAI() {
@@ -1076,10 +1080,10 @@ function aiSend() {
 </script>
 
 <!-- AI Assistant FAB + Panel -->
-<button class="ai-fab" onclick="toggleAI()" title="AI Assistant">&#9672;</button>
+<button class="ai-fab" onclick="toggleAI()" title="Clinic Assistant" style="font-size:0.7rem;font-family:Cinzel,serif;letter-spacing:1px">?</button>
 <div class="ai-panel" id="aiPanel">
   <div class="ai-header">
-    <h3>Clinical Assistant</h3>
+    <h3>Clinic Assistant</h3>
     <button class="ai-close" onclick="toggleAI()">&#10005;</button>
   </div>
   <div class="ai-messages" id="aiMessages"></div>
