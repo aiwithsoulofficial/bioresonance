@@ -258,7 +258,7 @@ async function loadDB() {
   render();
 }
 
-let progFilter = { cat: 'all', sub: 'all', letter: 'all', limit: 60 };
+let progFilter = { cat: 'all', sub: 'all', letter: 'all', machine: 'all', limit: 60 };
 
 // Sanitize HTML to prevent XSS
 function esc(str) { if (!str) return ''; const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
@@ -267,7 +267,7 @@ function setMode(m) {
   mode = m;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase() === m));
   document.getElementById('searchInput').value = '';
-  progFilter = { cat: 'all', sub: 'all', letter: 'all', limit: 60 };
+  progFilter = { cat: 'all', sub: 'all', letter: 'all', machine: 'all', limit: 60 };
   render();
 }
 
@@ -599,6 +599,7 @@ function renderPrograms(main) {
   let filtered = allProgs;
   if (progFilter.cat !== 'all') filtered = filtered.filter(p => p.category === progFilter.cat);
   if (progFilter.sub !== 'all') filtered = filtered.filter(p => p.subcategory === progFilter.sub);
+  if (progFilter.machine !== 'all') filtered = filtered.filter(p => p.machine === progFilter.machine);
   if (progFilter.letter !== 'all') filtered = filtered.filter(p => (p.name||'')[0].toUpperCase() === progFilter.letter);
 
   let html = `<h2 style="font-family:Cinzel,serif;color:var(--gold);margin-bottom:4px">${allProgs.length} Programs in Database</h2>
@@ -616,6 +617,12 @@ function renderPrograms(main) {
       <option value="all"${progFilter.sub==='all'?' selected':''}>All</option>
       ${allSubs.map(s => `<option value="${s}"${progFilter.sub===s?' selected':''}>${s}</option>`).join('')}
     </select>
+    <span class="filter-label">Machine</span>
+    <select onchange="progFilter.machine=this.value;progFilter.limit=60;render()">
+      <option value="all"${progFilter.machine==='all'?' selected':''}>All Machines</option>
+      <option value="both"${progFilter.machine==='both'?' selected':''}>BICOM 2000 + Optima (${allProgs.filter(p=>p.machine==='both').length})</option>
+      <option value="optima_only"${progFilter.machine==='optima_only'?' selected':''}>Optima Only (${allProgs.filter(p=>p.machine==='optima_only').length})</option>
+    </select>
   </div>`;
 
   // Letter navigation
@@ -631,7 +638,7 @@ function renderPrograms(main) {
   const shown = filtered.slice(0, progFilter.limit);
   html += '<div class="ref-grid">';
   shown.forEach(p => {
-    html += `<div class="ref-card"><h4>${p.name||'Unnamed'}</h4><p>${p.description ? p.description.substring(0,80) : (p.subcategory||'')}</p><div class="pn">${p.program_number}${p.therapy_mode ? ` <span class="prog-mode ${modeClass(p.therapy_mode)}" style="font-size:0.55rem">${p.therapy_mode}</span>` : ''}${p.time_minutes ? ` <span style="font-size:0.65rem;color:var(--cream-dim)">${p.time_minutes}min</span>` : ''}${p.is_optima_ldf ? ' <span style="font-size:0.55rem;color:var(--sage)">LDF</span>' : ''}</div></div>`;
+    html += `<div class="ref-card"><h4>${p.name||'Unnamed'}</h4><p>${p.description ? p.description.substring(0,80) : (p.subcategory||'')}</p><div class="pn">${p.program_number}${p.therapy_mode ? ` <span class="prog-mode ${modeClass(p.therapy_mode)}" style="font-size:0.55rem">${p.therapy_mode}</span>` : ''}${p.time_minutes ? ` <span style="font-size:0.65rem;color:var(--cream-dim)">${p.time_minutes}min</span>` : ''}${p.is_optima_ldf ? ' <span style="font-size:0.55rem;color:var(--sage)">LDF</span>' : ''}${p.machine==='optima_only' && !p.is_optima_ldf ? ' <span style="font-size:0.5rem;padding:1px 4px;border-radius:3px;background:rgba(75,127,160,0.12);color:#4a7fa0">OPTIMA</span>' : ''}</div></div>`;
   });
   html += '</div>';
 
@@ -854,7 +861,7 @@ function handleSearch(q) {
     const showProgs = progMatches.slice(0, 60);
     html += `<h3 style="font-family:Cinzel,serif;color:var(--gold);margin:12px 0 8px">Programs <span class="count-badge">${progMatches.length}</span></h3><div class="ref-grid">`;
     showProgs.forEach(p => {
-      html += `<div class="ref-card"><h4>${p.name||'Unnamed'}</h4><p>${p.subcategory||p.category||''} ${p.description ? ' - '+p.description.substring(0,60) : ''}</p><div class="pn">${p.program_number} ${p.therapy_mode?`<span class="prog-mode ${modeClass(p.therapy_mode)}">${p.therapy_mode}</span>`:''} ${p.time_minutes?`<span style="font-size:0.65rem;color:var(--cream-dim)">${p.time_minutes}min</span>`:''} ${p.is_optima_ldf?'<span style="font-size:0.55rem;color:var(--sage)">LDF</span>':''}</div></div>`;
+      html += `<div class="ref-card"><h4>${p.name||'Unnamed'}</h4><p>${p.subcategory||p.category||''} ${p.description ? ' - '+p.description.substring(0,60) : ''}</p><div class="pn">${p.program_number} ${p.therapy_mode?`<span class="prog-mode ${modeClass(p.therapy_mode)}">${p.therapy_mode}</span>`:''} ${p.time_minutes?`<span style="font-size:0.65rem;color:var(--cream-dim)">${p.time_minutes}min</span>`:''} ${p.is_optima_ldf?'<span style="font-size:0.55rem;color:var(--sage)">LDF</span>':''}${p.machine==='optima_only'&&!p.is_optima_ldf?' <span style="font-size:0.5rem;padding:1px 4px;border-radius:3px;background:rgba(75,127,160,0.12);color:#4a7fa0">OPTIMA</span>':''}</div></div>`;
     });
     html += '</div>';
     if (progMatches.length > 60) html += `<p style="font-size:0.72rem;color:var(--cream-dim);text-align:center;margin-top:8px">Showing 60 of ${progMatches.length} - refine your search for more specific results</p>`;
@@ -1193,6 +1200,17 @@ function renderHelp(main) {
         <li><span class="prog-mode m-ai" style="font-size:0.65rem">Ai</span> <strong>All inverted</strong> - Inverts foreign substances (moulds, chemicals, viruses).</li>
       </ul>
       <p style="margin-top:8px">Programs marked <span style="font-size:0.55rem;color:var(--sage);font-weight:600">LDF</span> are Optima-only Low Deep Frequency programs (3xxx range). Always run the LDF program first, then the standard program.</p>
+      <p style="margin-top:6px">Programs marked <span style="font-size:0.5rem;padding:1px 4px;border-radius:3px;background:rgba(75,127,160,0.12);color:#4a7fa0">OPTIMA</span> are extended programs (1000+ range) only available on the Optima, not the BICOM 2000.</p>
+    </div>
+
+    <div class="help-section">
+      <h3>BICOM 2000 vs Optima</h3>
+      <ul>
+        <li><strong>BICOM 2000</strong> - Programs 10-999. Frequency range 10 Hz to 150 kHz. Up to 6 programs per treatment series. No second channel.</li>
+        <li><strong>BICOM Optima</strong> - ALL programs (10-999 + 1000+ extended + 3xxx LDF). Extended frequency range down to 0.25 Hz (low deep frequency). Second input channel available. Programs show electrode placement on screen.</li>
+        <li>Use the <strong>Machine</strong> filter in the Programs tab to see only programs available for your machine.</li>
+        <li>When the Optima runs a treatment, always run the <strong>LDF program first</strong> (step 1), then the standard program (step 2).</li>
+      </ul>
     </div>
 
     <div class="help-section">
