@@ -245,13 +245,15 @@
       <button class="tab" onclick="setMode('protocols')">Protocols</button>
       <button class="tab" onclick="setMode('strains')">Strains</button>
       <button class="tab" onclick="setMode('reference')">Reference</button>
+      <button class="tab" onclick="setMode('naturopathic')">Naturopathic</button>
+      <button class="tab" onclick="setMode('pathways')">Pathways</button>
       <button class="tab kw-only" onclick="setMode('myprotocols')" style="display:none">My Protocols</button>
       <button class="tab" onclick="setMode('help')">Help</button>
     </div>
   </div>
 </header>
 <div class="search-bar">
-  <input type="search" id="searchInput" placeholder="Search symptoms, programs, strains, conditions..." oninput="handleSearch(this.value)">
+  <input type="search" id="searchInput" placeholder="Search symptoms, programs, strains, conditions, herbs, nutrients..." oninput="handleSearch(this.value)">
 </div>
 <main id="main"><div class="loading">Loading from database...</div></main>
 
@@ -276,6 +278,12 @@ async function loadDB() {
   // Load Kelly's protocols
   const kp = await sb.from('bio_kelly_protocols').select('*').order('created_at', { ascending: false });
   DB.kelly_protocols = kp.data || [];
+  // Load naturopathic data
+  const natRes = await sb.from('bio_naturopathic').select('*').order('body_system,condition');
+  DB.naturopathic = natRes.data || [];
+  // Load clinical pathways
+  const pathRes = await sb.from('bio_clinical_pathways').select('*');
+  DB.pathways = pathRes.data || [];
   // Show role-based tabs
   if (currentRole === 'admin' || currentRole === 'practitioner') {
     document.querySelectorAll('.kw-only').forEach(el => el.style.display = '');
@@ -284,13 +292,14 @@ async function loadDB() {
 }
 
 let progFilter = { cat: 'all', sub: 'all', letter: 'all', machine: 'all', limit: 60 };
+let natFilter = 'all';
 
 // Sanitize HTML to prevent XSS
 function esc(str) { if (!str) return ''; const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 
 function setMode(m) {
   mode = m;
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase() === m));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase() === m || (m === 'myprotocols' && t.textContent === 'My Protocols')));
   document.getElementById('searchInput').value = '';
   progFilter = { cat: 'all', sub: 'all', letter: 'all', machine: 'all', limit: 60 };
   render();
@@ -349,6 +358,8 @@ function render() {
   else if (mode === 'programs') renderPrograms(main);
   else if (mode === 'protocols') renderProtocols(main);
   else if (mode === 'strains') renderStrains(main);
+  else if (mode === 'naturopathic') renderNaturopathic(main);
+  else if (mode === 'pathways') renderPathways(main);
   else if (mode === 'myprotocols') renderMyProtocols(main);
   else if (mode === 'help') renderHelp(main);
   else renderReference(main);
@@ -1174,6 +1185,177 @@ async function deleteProtocol(id) {
   const kp = await sb.from('bio_kelly_protocols').select('*').order('created_at', { ascending: false });
   DB.kelly_protocols = kp.data || [];
   render();
+}
+
+// ============================================================
+// NATUROPATHIC TAB
+// ============================================================
+function renderNaturopathic(main) {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const data = DB.naturopathic || [];
+  const systems = [...new Set(data.map(d => d.body_system))].sort();
+
+  let filtered = data;
+  if (q) filtered = data.filter(d => d.condition.toLowerCase().includes(q) || d.body_system.toLowerCase().includes(q) || JSON.stringify(d.herbs||[]).toLowerCase().includes(q) || JSON.stringify(d.nutrients||[]).toLowerCase().includes(q));
+
+  let html = `<div class="banner"><div class="sn">N</div><div><h2>Naturopathic Medicine</h2><p>Hechtman's Clinical Naturopathic Medicine - ${data.length} conditions, cross-referenced with BICOM programs</p></div></div>`;
+
+  // Body system filter
+  html += `<div class="filter-bar"><label class="filter-label">Body System</label><select onchange="natFilter=this.value;render()"><option value="all">All Systems</option>${systems.map(s=>`<option value="${esc(s)}"${natFilter===s?' selected':''}>${esc(s)}</option>`).join('')}</select><span class="count-badge">${filtered.length} conditions</span></div>`;
+
+  if (natFilter && natFilter !== 'all') filtered = filtered.filter(d => d.body_system === natFilter);
+
+  filtered.forEach(d => {
+    const herbs = d.herbs || [];
+    const nutrients = d.nutrients || [];
+    const goals = d.naturopathic_goals || [];
+    const dietary = d.dietary_recommendations || {};
+    const lifestyle = d.lifestyle_recommendations || [];
+    const bicomCount = (d.related_bicom_program_ids||[]).length;
+
+    html += `<div class="guide-step" onclick="toggleStep(this)"><div class="step-header">
+      <div class="step-num" style="background:var(--gold);font-size:0.6rem">${esc(d.body_system?.substring(0,3).toUpperCase())}</div>
+      <div class="step-title"><h3>${esc(d.condition)}</h3><p>${esc(d.body_system)} - Ch ${d.chapter} (p${d.source_page_start}-${d.source_page_end}) | ${herbs.length} herbs | ${nutrients.length} nutrients | ${bicomCount} BICOM programs</p></div>
+      <span class="step-arrow">&#9660;</span></div>
+      <div class="step-content"><div class="step-body">`;
+
+    // Pathophysiology
+    if (d.pathophysiology) html += `<div class="card"><h4>Pathophysiology</h4><p>${esc(d.pathophysiology)}</p></div>`;
+
+    // Naturopathic Goals
+    if (goals.length) html += `<div class="card"><h4>Naturopathic Treatment Goals</h4><ul>${goals.map(g=>`<li>${esc(g)}</li>`).join('')}</ul></div>`;
+
+    // Herbs
+    if (herbs.length) {
+      html += `<div class="card"><h4>Herbal Medicine (${herbs.length})</h4><table class="data"><tr><th>Herb</th><th>Actions</th><th>Dosage</th><th>Contraindications</th></tr>`;
+      herbs.forEach(h => {
+        const actions = Array.isArray(h.actions) ? h.actions.join(', ') : (h.actions||'');
+        const contras = Array.isArray(h.contraindications) ? h.contraindications.join('; ') : (h.contraindications||'');
+        html += `<tr><td><strong>${esc(h.name)}</strong><br><em style="font-size:0.68rem;color:var(--cream-dim)">${esc(h.common_name)}</em></td><td style="font-size:0.72rem">${esc(actions)}</td><td style="font-size:0.72rem">${esc(h.dosage)}</td><td style="font-size:0.72rem;color:var(--detrimental)">${esc(contras)}</td></tr>`;
+      });
+      html += `</table></div>`;
+    }
+
+    // Nutrients
+    if (nutrients.length) {
+      html += `<div class="card"><h4>Nutritional Medicine (${nutrients.length})</h4><table class="data"><tr><th>Nutrient</th><th>Therapeutic Dosage</th><th>Notes</th></tr>`;
+      nutrients.forEach(n => {
+        html += `<tr><td><strong>${esc(n.name)}</strong></td><td>${esc(n.therapeutic_dosage)}</td><td style="font-size:0.72rem">${esc(n.notes)}</td></tr>`;
+      });
+      html += `</table></div>`;
+    }
+
+    // Dietary
+    if (dietary.include || dietary.exclude) {
+      html += `<div class="card"><h4>Dietary Recommendations</h4>`;
+      if (dietary.therapeutic_diet) html += `<p style="margin-bottom:8px"><strong>Protocol:</strong> ${esc(dietary.therapeutic_diet)}</p>`;
+      if (Array.isArray(dietary.include) && dietary.include.length) html += `<p style="color:var(--beneficial);font-weight:600;margin:6px 0 2px">Include:</p><ul>${dietary.include.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`;
+      if (Array.isArray(dietary.exclude) && dietary.exclude.length) html += `<p style="color:var(--detrimental);font-weight:600;margin:6px 0 2px">Exclude:</p><ul>${dietary.exclude.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>`;
+      if (dietary.notes) html += `<p style="margin-top:6px;font-size:0.72rem;color:var(--cream-dim)"><em>${esc(dietary.notes)}</em></p>`;
+      html += `</div>`;
+    }
+
+    // Lifestyle
+    if (lifestyle.length) html += `<div class="card"><h4>Lifestyle Recommendations</h4><ul>${lifestyle.map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>`;
+
+    // BICOM cross-reference
+    if (bicomCount > 0) {
+      const subs = d.related_bicom_subcategories || [];
+      html += `<div class="card"><h4>Linked BICOM Programs (${bicomCount})</h4><p>Subcategories: ${subs.map(s=>`<span class="tag tag-meridian">${esc(s)}</span>`).join(' ')}</p><p style="font-size:0.72rem;margin-top:6px">Switch to the <strong>Programs</strong> tab and filter by these subcategories to see all ${bicomCount} linked programs.</p></div>`;
+    }
+
+    html += `</div></div></div>`;
+  });
+
+  if (!filtered.length) html += `<div class="loading">No conditions found${q ? ' for "'+esc(q)+'"' : ''}. Try a different search.</div>`;
+  main.innerHTML = html;
+}
+
+// ============================================================
+// CLINICAL PATHWAYS TAB
+// ============================================================
+function renderPathways(main) {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const data = DB.pathways || [];
+  let filtered = data;
+  if (q) filtered = data.filter(d => d.condition.toLowerCase().includes(q) || JSON.stringify(d.common_strains||[]).toLowerCase().includes(q));
+
+  let html = `<div class="banner"><div class="sn">P</div><div><h2>Clinical Pathways</h2><p>Test - Find - Treat protocols with strain priority order, BICOM programs, and naturopathic support</p></div></div>`;
+  html += `<div class="card" style="border-left-color:var(--detrimental);margin-bottom:16px"><h4 style="color:var(--detrimental)">Strain Treatment Priority Order (Universal)</h4><p style="font-size:0.85rem;font-weight:600">Metals &#10132; Chemicals &#10132; Candida &#10132; Parasites &#10132; Bacteria &#10132; Viruses &#10132; Vaccinations <span style="color:var(--detrimental)">(LAST)</span></p><p style="font-size:0.72rem;color:var(--cream-dim);margin-top:4px">Always treat in this order. Metals suppress immune regulation. Vaccinations are the deepest layer.</p></div>`;
+
+  filtered.forEach(pw => {
+    const strains = pw.common_strains || [];
+    const p1 = pw.phase_1_assess || {};
+    const p2 = pw.phase_2_clear_blocks || {};
+    const p3 = pw.phase_3_treat_strains || {};
+    const p4 = pw.phase_4_organ_support || {};
+    const p5 = pw.phase_5_stabilise || {};
+    const p6 = pw.phase_6_naturopathic || {};
+
+    html += `<div class="guide-step" onclick="toggleStep(this)"><div class="step-header">
+      <div class="step-num" style="background:var(--gold)">&#9776;</div>
+      <div class="step-title"><h3>${esc(pw.condition)}</h3><p>${pw.session_frequency || ''} | ${pw.expected_sessions || ''}</p></div>
+      <span class="step-arrow">&#9660;</span></div>
+      <div class="step-content"><div class="step-body">`;
+
+    // Common strains to test
+    if (strains.length) {
+      html += `<div class="card"><h4>Common Strains to Test</h4><table class="data"><tr><th>Type</th><th>Strains to Test</th></tr>`;
+      strains.forEach(s => {
+        const strs = Array.isArray(s.strains) ? s.strains.join(', ') : (s.strains||'');
+        html += `<tr><td><strong>${esc(s.type)}</strong></td><td>${esc(strs)}</td></tr>`;
+      });
+      html += `</table></div>`;
+    }
+
+    // Phase cards
+    const phases = [
+      { num: 1, title: 'Assess & Test', data: p1, color: '#4a7fa0' },
+      { num: 2, title: 'Clear Blocks', data: p2, color: '#7b68ae' },
+      { num: 3, title: 'Treat Strains', data: p3, color: 'var(--detrimental)' },
+      { num: 4, title: 'Organ Support', data: p4, color: 'var(--sage)' },
+      { num: 5, title: 'Stabilise', data: p5, color: 'var(--gold)' },
+      { num: 6, title: 'Naturopathic Support', data: p6, color: '#9e6b3a' }
+    ];
+
+    phases.forEach(ph => {
+      if (!ph.data || !Object.keys(ph.data).length) return;
+      html += `<div class="card" style="border-left-color:${ph.color}"><h4 style="color:${ph.color}">Phase ${ph.num}: ${ph.title}</h4>`;
+      if (ph.data.description) html += `<p style="margin-bottom:8px">${esc(ph.data.description)}</p>`;
+
+      if (ph.num === 6) {
+        // Naturopathic phase - herbs, nutrients, dietary
+        if (ph.data.top_herbs) {
+          const herbs = Array.isArray(ph.data.top_herbs) ? ph.data.top_herbs : [];
+          if (herbs.length) html += `<p style="color:var(--sage);font-weight:600;margin:6px 0 2px">Key Herbs:</p><ul>${herbs.map(h=>`<li>${esc(h)}</li>`).join('')}</ul>`;
+        }
+        if (ph.data.top_nutrients) {
+          const nuts = Array.isArray(ph.data.top_nutrients) ? ph.data.top_nutrients : [];
+          if (nuts.length) html += `<p style="color:var(--gold);font-weight:600;margin:6px 0 2px">Key Nutrients:</p><ul>${nuts.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`;
+        }
+        if (ph.data.dietary) html += `<p style="margin-top:6px"><strong>Dietary:</strong> ${esc(ph.data.dietary)}</p>`;
+      } else {
+        // Program phases
+        const progs = ph.data.programs || [];
+        if (progs.length) {
+          progs.forEach(pr => {
+            html += `<div class="prog"><div class="prog-num">${esc(pr.number)}</div><div class="prog-info">${esc(pr.name)}<span>${esc(pr.purpose)}</span></div></div>`;
+          });
+        }
+        if (ph.data.priority_order) html += `<p style="margin-top:8px;font-weight:600;color:var(--detrimental)">Priority: ${esc(ph.data.priority_order)}</p>`;
+        if (ph.data.notes) html += `<p style="margin-top:6px;font-size:0.72rem;color:var(--cream-dim)"><em>${esc(ph.data.notes)}</em></p>`;
+      }
+      html += `</div>`;
+    });
+
+    // Follow-up notes
+    if (pw.follow_up_notes) html += `<div class="kelly">${esc(pw.follow_up_notes)}</div>`;
+
+    html += `</div></div></div>`;
+  });
+
+  if (!filtered.length) html += `<div class="loading">No pathways found${q ? ' for "'+esc(q)+'"' : ''}.</div>`;
+  main.innerHTML = html;
 }
 
 // ============================================================
