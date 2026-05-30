@@ -1558,22 +1558,37 @@ function renderTreatmentPlan(main) {
       <style>@keyframes tpSpin { to { transform: rotate(360deg); } }</style>
     </div>`;
   } else if (tpResult) {
-    // Bioresonance Protocol
+    // Bioresonance Protocol (editable)
     html += `<div style="margin-top:24px">
-      <div class="banner" style="margin-bottom:0"><div class="sn" style="background:var(--detrimental)">B</div><div><h2>Bioresonance Protocol</h2><p>Testing and treatment session plan</p></div></div>
-      <div class="card" style="border-left-color:var(--detrimental)">${tpResult.bioresonance || '<em>No bioresonance protocol generated</em>'}</div>
+      <div class="banner" style="margin-bottom:0"><div class="sn" style="background:var(--detrimental)">B</div><div><h2>Bioresonance Protocol</h2><p>Testing and treatment session plan - click to edit</p></div></div>
+      <div class="card" style="border-left-color:var(--detrimental);padding:0;overflow:hidden">
+        <div id="tpBioDisplay" onclick="tpEditSection('bio')" style="padding:20px 24px;cursor:pointer;min-height:60px">${tpResult.bioresonance || '<em>No bioresonance protocol generated</em>'}</div>
+        <textarea id="tpBioEdit" style="display:none;width:100%;min-height:400px;padding:16px;border:none;border-top:2px solid var(--gold);background:var(--card);color:var(--cream);font-family:inherit;font-size:0.82rem;resize:vertical;line-height:1.7" onblur="tpSaveEdit('bio')"></textarea>
+      </div>
     </div>`;
 
-    // Naturopathic Pathways
+    // Naturopathic Pathways (editable)
     html += `<div style="margin-top:24px">
-      <div class="banner" style="margin-bottom:0"><div class="sn" style="background:var(--sage)">N</div><div><h2>Naturopathic Pathways</h2><p>Take-home protocol for the patient</p></div></div>
-      <div class="card" style="border-left-color:var(--sage)">${tpResult.naturopathic || '<em>No naturopathic pathways generated</em>'}</div>
+      <div class="banner" style="margin-bottom:0"><div class="sn" style="background:var(--sage)">N</div><div><h2>Naturopathic Pathways</h2><p>Take-home protocol - click to edit</p></div></div>
+      <div class="card" style="border-left-color:var(--sage);padding:0;overflow:hidden">
+        <div id="tpNatDisplay" onclick="tpEditSection('nat')" style="padding:20px 24px;cursor:pointer;min-height:60px">${tpResult.naturopathic || '<em>No naturopathic pathways generated</em>'}</div>
+        <textarea id="tpNatEdit" style="display:none;width:100%;min-height:400px;padding:16px;border:none;border-top:2px solid var(--gold);background:var(--card);color:var(--cream);font-family:inherit;font-size:0.82rem;resize:vertical;line-height:1.7" onblur="tpSaveEdit('nat')"></textarea>
+      </div>
+    </div>`;
+
+    // Session notes
+    html += `<div style="margin-top:24px">
+      <div class="banner" style="margin-bottom:0"><div class="sn" style="background:#7b68ae">+</div><div><h2>Session Notes</h2><p>Add notes, observations, follow-up actions</p></div></div>
+      <div class="card" style="border-left-color:#7b68ae">
+        <textarea id="tpNotes" rows="4" style="width:100%;padding:12px;border-radius:8px;border:1px solid #555;background:var(--card);color:var(--cream);font-family:inherit;font-size:0.85rem;resize:vertical" placeholder="Add session notes, observations, extra programs to run, follow-up actions...">${tpResult.notes || ''}</textarea>
+      </div>
     </div>`;
 
     // Action buttons
     html += `<div style="text-align:center;margin:24px 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button onclick="saveTreatmentPlan()" style="padding:12px 32px;background:var(--sage);color:var(--bg);border:none;border-radius:20px;cursor:pointer;font-weight:600;font-size:0.9rem">Save to Client File</button>
+      <button onclick="saveTreatmentPlan()" style="padding:12px 32px;background:var(--sage);color:var(--bg);border:none;border-radius:20px;cursor:pointer;font-weight:600;font-size:0.9rem">${tpResult.savedId ? 'Update Client File' : 'Save to Client File'}</button>
       <button onclick="printTreatmentPlan()" style="padding:12px 32px;background:var(--gold);color:var(--bg);border:none;border-radius:20px;cursor:pointer;font-weight:600;font-size:0.9rem">Print / Save as PDF</button>
+      ${tpResult.savedId ? `<button onclick="deleteTreatmentPlan(${tpResult.savedId})" style="padding:12px 24px;background:transparent;color:var(--detrimental);border:1px solid var(--detrimental);border-radius:20px;cursor:pointer;font-size:0.8rem">Delete Plan</button>` : ''}
     </div>`;
   }
 
@@ -1661,25 +1676,76 @@ async function generateTreatmentPlan() {
   render();
 }
 
+function tpEditSection(section) {
+  const display = document.getElementById(section === 'bio' ? 'tpBioDisplay' : 'tpNatDisplay');
+  const edit = document.getElementById(section === 'bio' ? 'tpBioEdit' : 'tpNatEdit');
+  // Convert HTML to editable text - preserve HTML tags for re-rendering
+  edit.value = display.innerHTML;
+  display.style.display = 'none';
+  edit.style.display = 'block';
+  edit.focus();
+}
+
+function tpSaveEdit(section) {
+  const display = document.getElementById(section === 'bio' ? 'tpBioDisplay' : 'tpNatDisplay');
+  const edit = document.getElementById(section === 'bio' ? 'tpBioEdit' : 'tpNatEdit');
+  const newContent = edit.value;
+  display.innerHTML = newContent;
+  display.style.display = 'block';
+  edit.style.display = 'none';
+  // Update tpResult
+  if (tpResult && typeof tpResult === 'object') {
+    if (section === 'bio') tpResult.bioresonance = newContent;
+    else tpResult.naturopathic = newContent;
+  }
+}
+
+async function deleteTreatmentPlan(id) {
+  if (!confirm('Delete this treatment plan?')) return;
+  await sb.from('bio_treatment_plans').delete().eq('id', id);
+  const tpRes = await sb.from('bio_treatment_plans').select('*').order('created_at', { ascending: false });
+  DB.treatment_plans = tpRes.data || [];
+  tpResult = null;
+  tpClientName = '';
+  tpSymptoms = '';
+  render();
+}
+
 async function saveTreatmentPlan() {
   if (!tpResult || tpResult === 'loading') { alert('Generate a plan first'); return; }
   const clientName = document.getElementById('tpClientName').value.trim();
   if (!clientName) { alert('Please enter the client name'); return; }
+  const notes = document.getElementById('tpNotes')?.value || '';
+  tpResult.notes = notes;
 
-  const { error } = await sb.from('bio_treatment_plans').insert({
+  const planData = {
     client_name: clientName,
     symptoms: tpSymptoms,
     bioresonance: tpResult.bioresonance,
     naturopathic: tpResult.naturopathic,
-    created_by: currentEmail
-  });
+    notes: notes,
+    created_by: currentEmail,
+    updated_at: new Date().toISOString()
+  };
+
+  let error;
+  if (tpResult.savedId) {
+    // Update existing plan
+    const res = await sb.from('bio_treatment_plans').update(planData).eq('id', tpResult.savedId);
+    error = res.error;
+  } else {
+    // Insert new plan
+    const res = await sb.from('bio_treatment_plans').insert(planData).select();
+    error = res.error;
+    if (res.data && res.data[0]) tpResult.savedId = res.data[0].id;
+  }
 
   if (error) { alert('Error saving: ' + error.message); return; }
 
   // Reload saved plans
   const tpRes = await sb.from('bio_treatment_plans').select('*').order('created_at', { ascending: false });
   DB.treatment_plans = tpRes.data || [];
-  alert('Treatment plan saved for ' + clientName);
+  alert((tpResult.savedId ? 'Updated' : 'Saved') + ' treatment plan for ' + clientName);
   render();
 }
 
@@ -1690,7 +1756,9 @@ async function loadSavedPlan(id) {
   tpSymptoms = plan.symptoms;
   tpResult = {
     bioresonance: plan.bioresonance,
-    naturopathic: plan.naturopathic
+    naturopathic: plan.naturopathic,
+    notes: plan.notes || '',
+    savedId: plan.id
   };
   render();
 }
