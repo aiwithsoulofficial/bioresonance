@@ -1196,9 +1196,9 @@ function renderNaturopathic(main) {
   const systems = [...new Set(data.map(d => d.body_system))].sort();
 
   let filtered = data;
-  if (q) filtered = data.filter(d => d.condition.toLowerCase().includes(q) || d.body_system.toLowerCase().includes(q) || JSON.stringify(d.herbs||[]).toLowerCase().includes(q) || JSON.stringify(d.nutrients||[]).toLowerCase().includes(q));
+  if (q) filtered = data.filter(d => d.condition.toLowerCase().includes(q) || d.body_system.toLowerCase().includes(q) || JSON.stringify(d.herbs||[]).toLowerCase().includes(q) || JSON.stringify(d.nutrients||[]).toLowerCase().includes(q) || JSON.stringify(d.biochemical_mechanisms||[]).toLowerCase().includes(q) || JSON.stringify(d.nutrigenomics||[]).toLowerCase().includes(q) || JSON.stringify(d.tissue_salts||[]).toLowerCase().includes(q) || JSON.stringify(d.flower_essences||[]).toLowerCase().includes(q));
 
-  let html = `<div class="banner"><div class="sn">N</div><div><h2>Naturopathic Medicine</h2><p>Hechtman's Clinical Naturopathic Medicine - ${data.length} conditions, cross-referenced with BICOM programs</p></div></div>`;
+  let html = `<div class="banner"><div class="sn">N</div><div><h2>Naturopathic Medicine</h2><p>Hechtman's Clinical Naturopathic Medicine - ${data.length} conditions with biochemical mechanisms, nutrigenomics, tissue salts, flower essences, and PNI</p></div></div>`;
 
   // Body system filter
   html += `<div class="filter-bar"><label class="filter-label">Body System</label><select onchange="natFilter=this.value;render()"><option value="all">All Systems</option>${systems.map(s=>`<option value="${esc(s)}"${natFilter===s?' selected':''}>${esc(s)}</option>`).join('')}</select><span class="count-badge">${filtered.length} conditions</span></div>`;
@@ -1257,6 +1257,70 @@ function renderNaturopathic(main) {
 
     // Lifestyle
     if (lifestyle.length) html += `<div class="card"><h4>Lifestyle Recommendations</h4><ul>${lifestyle.map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>`;
+
+    // === ENRICHMENT FIELDS ===
+
+    // Biochemical Mechanisms
+    const biochem = d.biochemical_mechanisms || [];
+    if (biochem.length) {
+      html += `<div class="card" style="border-left-color:#7b68ae"><h4 style="color:#7b68ae">&#9883; Biochemical Mechanisms (${biochem.length})</h4>`;
+      biochem.forEach(b => {
+        html += `<div style="margin-bottom:10px"><p style="font-weight:600;color:var(--gold);margin-bottom:3px">${esc(b.pathway)}</p><p style="font-size:0.75rem;line-height:1.5">${esc(b.mechanism)}</p></div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Nutrient Cofactors
+    const cofactors = d.nutrient_cofactors || [];
+    if (cofactors.length) {
+      html += `<div class="card" style="border-left-color:var(--sage)"><h4 style="color:var(--sage)">&#9878; Nutrient Cofactors & Interactions (${cofactors.length})</h4><table class="data"><tr><th>Nutrient</th><th>Role & Mechanism</th><th>Interaction</th></tr>`;
+      cofactors.forEach(c => {
+        html += `<tr><td><strong>${esc(c.nutrient)}</strong></td><td style="font-size:0.72rem">${esc(c.role)}</td><td style="font-size:0.72rem;color:var(--detrimental)">${esc(c.interaction)}</td></tr>`;
+      });
+      html += `</table></div>`;
+    }
+
+    // Nutrigenomics
+    const nutrigen = d.nutrigenomics || [];
+    if (nutrigen.length) {
+      html += `<div class="card" style="border-left-color:#4a7fa0"><h4 style="color:#4a7fa0">&#9879; Nutrigenomics (${nutrigen.length})</h4><table class="data"><tr><th>Gene</th><th>Variants</th><th>Clinical Consideration</th></tr>`;
+      nutrigen.forEach(g => {
+        html += `<tr><td><strong>${esc(g.gene)}</strong></td><td style="font-size:0.72rem">${esc(g.variants)}</td><td style="font-size:0.72rem">${esc(g.clinical_consideration)}</td></tr>`;
+      });
+      html += `</table></div>`;
+    }
+
+    // Tissue Salts
+    const salts = d.tissue_salts || [];
+    if (salts.length) {
+      html += `<div class="card" style="border-left-color:var(--gold)"><h4 style="color:var(--gold)">&#9883; Tissue Salts (${salts.length})</h4>`;
+      salts.forEach(s => {
+        html += `<p style="margin-bottom:6px"><strong>${esc(s.salt)}</strong> - <span style="font-size:0.75rem">${esc(s.indication)}</span></p>`;
+      });
+      html += `</div>`;
+    }
+
+    // Flower Essences
+    const flowers = d.flower_essences || [];
+    if (flowers.length) {
+      html += `<div class="card" style="border-left-color:#9e6b3a"><h4 style="color:#9e6b3a">&#10047; Flower Essences (${flowers.length})</h4>`;
+      flowers.forEach(f => {
+        const badge = f.type === 'Bach' ? 'tag-beneficial' : 'tag-meridian';
+        html += `<p style="margin-bottom:6px"><span class="tag ${badge}">${esc(f.type)}</span> <strong>${esc(f.essence)}</strong> - <span style="font-size:0.75rem">${esc(f.indication)}</span></p>`;
+      });
+      html += `</div>`;
+    }
+
+    // Psychoneuroimmunology
+    const pni = d.psychoneuroimmunology;
+    if (pni && typeof pni === 'object' && Object.keys(pni).length) {
+      html += `<div class="card" style="border-left-color:#c76b8a"><h4 style="color:#c76b8a">&#10038; Psychoneuroimmunology</h4>`;
+      if (pni.hpa_axis) html += `<p style="margin-bottom:8px"><strong style="color:var(--gold)">HPA Axis:</strong> <span style="font-size:0.75rem">${esc(pni.hpa_axis)}</span></p>`;
+      if (pni.vagal_tone) html += `<p style="margin-bottom:8px"><strong style="color:var(--sage)">Vagal Tone:</strong> <span style="font-size:0.75rem">${esc(pni.vagal_tone)}</span></p>`;
+      if (pni.gut_brain_skin) html += `<p style="margin-bottom:8px"><strong style="color:#4a7fa0">Gut-Brain Axis:</strong> <span style="font-size:0.75rem">${esc(pni.gut_brain_skin)}</span></p>`;
+      if (pni.clinical_note) html += `<p style="margin-top:8px;padding:8px;background:rgba(255,255,255,0.05);border-radius:6px;font-size:0.75rem"><strong>Clinical Note:</strong> ${esc(pni.clinical_note)}</p>`;
+      html += `</div>`;
+    }
 
     // BICOM cross-reference
     if (bicomCount > 0) {
