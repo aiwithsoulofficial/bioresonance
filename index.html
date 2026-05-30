@@ -300,7 +300,7 @@ function esc(str) { if (!str) return ''; const d = document.createElement('div')
 
 function setMode(m) {
   mode = m;
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase() === m || (m === 'myprotocols' && t.textContent === 'My Protocols')));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase() === m || (m === 'myprotocols' && t.textContent === 'My Protocols') || (m === 'treatmentplan' && t.textContent === 'Treatment Plan')));
   document.getElementById('searchInput').value = '';
   progFilter = { cat: 'all', sub: 'all', letter: 'all', machine: 'all', limit: 60 };
   render();
