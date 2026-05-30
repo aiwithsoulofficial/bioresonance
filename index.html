@@ -285,6 +285,9 @@ async function loadDB() {
   // Load clinical pathways
   const pathRes = await sb.from('bio_clinical_pathways').select('*');
   DB.pathways = pathRes.data || [];
+  // Load saved treatment plans
+  const tpRes = await sb.from('bio_treatment_plans').select('*').order('created_at', { ascending: false });
+  DB.treatment_plans = tpRes.data || [];
   // Show role-based tabs
   if (currentRole === 'admin' || currentRole === 'practitioner') {
     document.querySelectorAll('.kw-only').forEach(el => el.style.display = '');
@@ -1519,16 +1522,31 @@ function renderHelp(main) {
 // TREATMENT PLAN GENERATOR
 // ============================================================
 let tpResult = null;
+let tpClientName = '';
+let tpSymptoms = '';
 
 function renderTreatmentPlan(main) {
+  const savedPlans = DB.treatment_plans || [];
   let html = `<div class="banner"><div class="sn" style="background:var(--gold)">Rx</div><div><h2>Treatment Plan Generator</h2><p>Enter the patient's symptom picture to generate a Bioresonance Protocol and Naturopathic Pathways</p></div></div>`;
 
+  // Saved plans recall
+  if (savedPlans.length) {
+    html += `<div class="card" style="border-left-color:var(--sage);margin-bottom:16px">
+      <h4 style="margin-bottom:8px">Saved Plans (${savedPlans.length})</h4>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${savedPlans.map(p => `<button onclick="loadSavedPlan(${p.id})" style="padding:6px 16px;background:var(--card);color:var(--cream);border:1px solid #555;border-radius:16px;cursor:pointer;font-size:0.78rem"><strong>${esc(p.client_name)}</strong> <span style="color:var(--cream-dim);font-size:0.7rem">${new Date(p.created_at).toLocaleDateString()}</span></button>`).join('')}
+      </div>
+    </div>`;
+  }
+
   html += `<div class="card" style="border-left-color:var(--gold)">
-    <h4 style="margin-bottom:8px">Patient Symptom Picture</h4>
-    <textarea id="tpSymptoms" rows="5" style="width:100%;padding:12px;border-radius:8px;border:1px solid #555;background:var(--card);color:var(--cream);font-family:inherit;font-size:0.85rem;resize:vertical" placeholder="Describe the patient's presentation, e.g.:&#10;&#10;45yo female. Chronic eczema on arms and legs, brain fog, bloating after meals, recurrent UTIs (3 in last 6 months), anxiety, fatigue, cold hands and feet. History: 2 rounds antibiotics for UTI in last year. Post-COVID onset. Mother had thrush during breastfeeding.&#10;&#10;Include: symptoms, history, triggers, duration, what makes it better/worse, medications, family history.">${tpResult ? '' : ''}</textarea>
+    <h4 style="margin-bottom:8px">Patient Details</h4>
+    <input type="text" id="tpClientName" value="${tpClientName || ''}" placeholder="Client name" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #555;background:var(--card);color:var(--cream);font-family:inherit;font-size:0.85rem;margin-bottom:12px">
+    <h4 style="margin-bottom:8px">Symptom Picture</h4>
+    <textarea id="tpSymptoms" rows="5" style="width:100%;padding:12px;border-radius:8px;border:1px solid #555;background:var(--card);color:var(--cream);font-family:inherit;font-size:0.85rem;resize:vertical" placeholder="Describe the patient's presentation, e.g.:&#10;&#10;45yo female. Chronic eczema on arms and legs, brain fog, bloating after meals, recurrent UTIs (3 in last 6 months), anxiety, fatigue, cold hands and feet. History: 2 rounds antibiotics for UTI in last year. Post-COVID onset. Mother had thrush during breastfeeding.&#10;&#10;Include: symptoms, history, triggers, duration, what makes it better/worse, medications, family history.">${tpSymptoms || ''}</textarea>
     <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
       <button onclick="generateTreatmentPlan()" style="padding:10px 28px;background:var(--gold);color:var(--bg);border:none;border-radius:20px;cursor:pointer;font-weight:600;font-size:0.85rem">Generate Treatment Plan</button>
-      <button onclick="tpResult=null;render()" style="padding:10px 20px;background:transparent;color:var(--cream-dim);border:1px solid #555;border-radius:20px;cursor:pointer;font-size:0.8rem">Clear</button>
+      <button onclick="tpResult=null;tpClientName='';tpSymptoms='';render()" style="padding:10px 20px;background:transparent;color:var(--cream-dim);border:1px solid #555;border-radius:20px;cursor:pointer;font-size:0.8rem">Clear</button>
     </div>
   </div>`;
 
@@ -1552,8 +1570,9 @@ function renderTreatmentPlan(main) {
       <div class="card" style="border-left-color:var(--sage)">${tpResult.naturopathic || '<em>No naturopathic pathways generated</em>'}</div>
     </div>`;
 
-    // Print button
-    html += `<div style="text-align:center;margin:24px 0">
+    // Action buttons
+    html += `<div style="text-align:center;margin:24px 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button onclick="saveTreatmentPlan()" style="padding:12px 32px;background:var(--sage);color:var(--bg);border:none;border-radius:20px;cursor:pointer;font-weight:600;font-size:0.9rem">Save to Client File</button>
       <button onclick="printTreatmentPlan()" style="padding:12px 32px;background:var(--gold);color:var(--bg);border:none;border-radius:20px;cursor:pointer;font-weight:600;font-size:0.9rem">Print / Save as PDF</button>
     </div>`;
   }
@@ -1563,7 +1582,11 @@ function renderTreatmentPlan(main) {
 
 async function generateTreatmentPlan() {
   const symptoms = document.getElementById('tpSymptoms').value.trim();
+  const clientName = document.getElementById('tpClientName').value.trim();
   if (!symptoms) { alert('Please enter the patient symptom picture'); return; }
+  if (!clientName) { alert('Please enter the client name'); return; }
+  tpClientName = clientName;
+  tpSymptoms = symptoms;
 
   tpResult = 'loading';
   render();
@@ -1638,11 +1661,46 @@ async function generateTreatmentPlan() {
   render();
 }
 
+async function saveTreatmentPlan() {
+  if (!tpResult || tpResult === 'loading') { alert('Generate a plan first'); return; }
+  const clientName = document.getElementById('tpClientName').value.trim();
+  if (!clientName) { alert('Please enter the client name'); return; }
+
+  const { error } = await sb.from('bio_treatment_plans').insert({
+    client_name: clientName,
+    symptoms: tpSymptoms,
+    bioresonance: tpResult.bioresonance,
+    naturopathic: tpResult.naturopathic,
+    created_by: currentEmail
+  });
+
+  if (error) { alert('Error saving: ' + error.message); return; }
+
+  // Reload saved plans
+  const tpRes = await sb.from('bio_treatment_plans').select('*').order('created_at', { ascending: false });
+  DB.treatment_plans = tpRes.data || [];
+  alert('Treatment plan saved for ' + clientName);
+  render();
+}
+
+async function loadSavedPlan(id) {
+  const plan = (DB.treatment_plans || []).find(p => p.id === id);
+  if (!plan) return;
+  tpClientName = plan.client_name;
+  tpSymptoms = plan.symptoms;
+  tpResult = {
+    bioresonance: plan.bioresonance,
+    naturopathic: plan.naturopathic
+  };
+  render();
+}
+
 function printTreatmentPlan() {
   const printWin = window.open('', '_blank');
   const bio = tpResult?.bioresonance || '';
   const nat = tpResult?.naturopathic || '';
-  printWin.document.write(`<!DOCTYPE html><html><head><title>Treatment Plan</title>
+  const clientName = tpClientName || 'Patient';
+  printWin.document.write(`<!DOCTYPE html><html><head><title>Treatment Plan - ${clientName}</title>
     <style>
       body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; line-height: 1.7; color: #333; }
       h1 { color: #54605C; border-bottom: 2px solid #DECFC7; padding-bottom: 8px; }
@@ -1655,10 +1713,13 @@ function printTreatmentPlan() {
       @media print { body { margin: 20px; } }
     </style>
   </head><body>
-    <h1>Bioresonance Protocol</h1>
+    <p style="color:#54605C;font-size:14px;margin-bottom:4px">PEACE OF EDEN HOLISTIC HEALTH</p>
+    <h1 style="margin-bottom:4px">Treatment Plan: ${clientName}</h1>
+    <p style="color:#999;font-size:13px;margin-bottom:30px">${new Date().toLocaleDateString()}</p>
+    <h2>Bioresonance Protocol</h2>
     <div class="section">${bio}</div>
     <div style="page-break-before:always"></div>
-    <h1>Naturopathic Pathways</h1>
+    <h2>Naturopathic Pathways</h2>
     <div class="section">${nat}</div>
     <p style="color:#999;font-size:12px;margin-top:40px;text-align:center">Generated by Peace of Eden Clinical Guide | ${new Date().toLocaleDateString()}</p>
   </body></html>`);
