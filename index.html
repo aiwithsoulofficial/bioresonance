@@ -247,6 +247,7 @@
       <button class="tab" onclick="setMode('reference')">Reference</button>
       <button class="tab" onclick="setMode('naturopathic')">Naturopathic</button>
       <button class="tab" onclick="setMode('pathways')">Pathways</button>
+      <button class="tab" onclick="setMode('treatmentplan')" style="background:var(--gold);color:var(--bg)">Treatment Plan</button>
       <button class="tab kw-only" onclick="setMode('myprotocols')" style="display:none">My Protocols</button>
       <button class="tab" onclick="setMode('help')">Help</button>
     </div>
@@ -360,6 +361,7 @@ function render() {
   else if (mode === 'strains') renderStrains(main);
   else if (mode === 'naturopathic') renderNaturopathic(main);
   else if (mode === 'pathways') renderPathways(main);
+  else if (mode === 'treatmentplan') renderTreatmentPlan(main);
   else if (mode === 'myprotocols') renderMyProtocols(main);
   else if (mode === 'help') renderHelp(main);
   else renderReference(main);
@@ -1511,6 +1513,152 @@ function renderHelp(main) {
     </div>`;
 
   main.innerHTML = html;
+}
+
+// ============================================================
+// TREATMENT PLAN GENERATOR
+// ============================================================
+let tpResult = null;
+
+function renderTreatmentPlan(main) {
+  let html = `<div class="banner"><div class="sn" style="background:var(--gold)">Rx</div><div><h2>Treatment Plan Generator</h2><p>Enter the patient's symptom picture to generate a Bioresonance Protocol and Naturopathic Pathways</p></div></div>`;
+
+  html += `<div class="card" style="border-left-color:var(--gold)">
+    <h4 style="margin-bottom:8px">Patient Symptom Picture</h4>
+    <textarea id="tpSymptoms" rows="5" style="width:100%;padding:12px;border-radius:8px;border:1px solid #555;background:var(--card);color:var(--cream);font-family:inherit;font-size:0.85rem;resize:vertical" placeholder="Describe the patient's presentation, e.g.:&#10;&#10;45yo female. Chronic eczema on arms and legs, brain fog, bloating after meals, recurrent UTIs (3 in last 6 months), anxiety, fatigue, cold hands and feet. History: 2 rounds antibiotics for UTI in last year. Post-COVID onset. Mother had thrush during breastfeeding.&#10;&#10;Include: symptoms, history, triggers, duration, what makes it better/worse, medications, family history.">${tpResult ? '' : ''}</textarea>
+    <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+      <button onclick="generateTreatmentPlan()" style="padding:10px 28px;background:var(--gold);color:var(--bg);border:none;border-radius:20px;cursor:pointer;font-weight:600;font-size:0.85rem">Generate Treatment Plan</button>
+      <button onclick="tpResult=null;render()" style="padding:10px 20px;background:transparent;color:var(--cream-dim);border:1px solid #555;border-radius:20px;cursor:pointer;font-size:0.8rem">Clear</button>
+    </div>
+  </div>`;
+
+  if (tpResult === 'loading') {
+    html += `<div class="loading" style="margin-top:20px">Generating treatment plan... This may take 30-60 seconds as I cross-reference all conditions, programs, pathways, and naturopathic data.</div>`;
+  } else if (tpResult) {
+    // Bioresonance Protocol
+    html += `<div style="margin-top:24px">
+      <div class="banner" style="margin-bottom:0"><div class="sn" style="background:var(--detrimental)">B</div><div><h2>Bioresonance Protocol</h2><p>Testing and treatment session plan</p></div></div>
+      <div class="card" style="border-left-color:var(--detrimental)">${tpResult.bioresonance || '<em>No bioresonance protocol generated</em>'}</div>
+    </div>`;
+
+    // Naturopathic Pathways
+    html += `<div style="margin-top:24px">
+      <div class="banner" style="margin-bottom:0"><div class="sn" style="background:var(--sage)">N</div><div><h2>Naturopathic Pathways</h2><p>Take-home protocol for the patient</p></div></div>
+      <div class="card" style="border-left-color:var(--sage)">${tpResult.naturopathic || '<em>No naturopathic pathways generated</em>'}</div>
+    </div>`;
+
+    // Print button
+    html += `<div style="text-align:center;margin:24px 0">
+      <button onclick="printTreatmentPlan()" style="padding:12px 32px;background:var(--gold);color:var(--bg);border:none;border-radius:20px;cursor:pointer;font-weight:600;font-size:0.9rem">Print / Save as PDF</button>
+    </div>`;
+  }
+
+  main.innerHTML = html;
+}
+
+async function generateTreatmentPlan() {
+  const symptoms = document.getElementById('tpSymptoms').value.trim();
+  if (!symptoms) { alert('Please enter the patient symptom picture'); return; }
+
+  tpResult = 'loading';
+  render();
+
+  // Gather ALL database context for the AI
+  const conditions = DB.naturopathic || [];
+  const pathways = DB.pathways || [];
+  const programs = DB.programs || [];
+
+  // Build a condensed reference of what's available
+  const condSummary = conditions.map(c => ({
+    id: c.id, condition: c.condition, body_system: c.body_system,
+    herbs: (c.herbs||[]).map(h=>h.common_name||h.name),
+    nutrients: (c.nutrients||[]).map(n=>n.name),
+    biochem: (c.biochemical_mechanisms||[]).map(b=>b.pathway),
+    nutrigenomics: (c.nutrigenomics||[]).map(g=>g.gene),
+    tissue_salts: (c.tissue_salts||[]).map(s=>s.salt),
+    flower_essences: (c.flower_essences||[]).map(f=>f.essence + ' (' + f.type + ')'),
+    pni: c.psychoneuroimmunology,
+    dietary: c.dietary_recommendations,
+    lifestyle: c.lifestyle_recommendations,
+    bicom_subcategories: c.related_bicom_subcategories
+  }));
+
+  const pathwaySummary = pathways.map(p => ({
+    condition: p.condition,
+    phases: {
+      assess: p.phase_1_assess,
+      clear: p.phase_2_clear_blocks,
+      treat: p.phase_3_treat_strains,
+      organ: p.phase_4_organ_support,
+      stabilise: p.phase_5_stabilise,
+      naturopathic: p.phase_6_naturopathic
+    },
+    notes: p.follow_up_notes,
+    frequency: p.session_frequency,
+    sessions: p.expected_sessions
+  }));
+
+  // Get relevant program categories
+  const programCategories = [...new Set(programs.map(p=>p.subcategory))].sort();
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/clinic-assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({
+        action: 'treatment_plan',
+        symptoms: symptoms,
+        conditions: condSummary,
+        pathways: pathwaySummary,
+        programCategories: programCategories,
+        userEmail: currentEmail
+      })
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      tpResult = null;
+      alert('Error generating plan: ' + data.error);
+    } else {
+      tpResult = {
+        bioresonance: (data.bioresonance || '').replace(/\n/g, '<br>'),
+        naturopathic: (data.naturopathic || '').replace(/\n/g, '<br>')
+      };
+    }
+  } catch (err) {
+    tpResult = null;
+    alert('Connection error: ' + err.message);
+  }
+
+  render();
+}
+
+function printTreatmentPlan() {
+  const printWin = window.open('', '_blank');
+  const bio = tpResult?.bioresonance || '';
+  const nat = tpResult?.naturopathic || '';
+  printWin.document.write(`<!DOCTYPE html><html><head><title>Treatment Plan</title>
+    <style>
+      body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; line-height: 1.7; color: #333; }
+      h1 { color: #54605C; border-bottom: 2px solid #DECFC7; padding-bottom: 8px; }
+      h2 { color: #54605C; margin-top: 30px; }
+      h3 { color: #333; }
+      table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+      th { background: #54605C; color: white; padding: 8px 12px; text-align: left; }
+      td { padding: 8px 12px; border-bottom: 1px solid #DECFC7; }
+      .section { page-break-inside: avoid; margin-bottom: 20px; }
+      @media print { body { margin: 20px; } }
+    </style>
+  </head><body>
+    <h1>Bioresonance Protocol</h1>
+    <div class="section">${bio}</div>
+    <div style="page-break-before:always"></div>
+    <h1>Naturopathic Pathways</h1>
+    <div class="section">${nat}</div>
+    <p style="color:#999;font-size:12px;margin-top:40px;text-align:center">Generated by Peace of Eden Clinical Guide | ${new Date().toLocaleDateString()}</p>
+  </body></html>`);
+  printWin.document.close();
+  setTimeout(() => printWin.print(), 500);
 }
 
 // ============================================================
