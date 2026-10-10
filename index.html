@@ -222,9 +222,10 @@
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.08)">
     <div style="font-family:Cinzel,serif;font-size:1.4rem;color:var(--gold);margin-bottom:4px">BICOM Optima</div>
     <div style="font-size:0.7rem;color:var(--cream-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:24px">Clinical Guide & Database</div>
-    <p style="font-size:0.78rem;color:var(--cream-dim);margin-bottom:16px">Enter your authorised email to access.</p>
-    <input type="email" id="authEmail" placeholder="your@email.com" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.85rem;text-align:center;margin-bottom:12px;background:var(--bg);color:var(--cream)" onkeydown="if(event.key==='Enter')checkEmail()">
-    <button onclick="checkEmail()" style="width:100%;padding:10px;border:none;border-radius:8px;background:var(--gold);color:white;font-family:Cinzel,serif;font-size:0.8rem;cursor:pointer;letter-spacing:1px">Enter</button>
+    <p style="font-size:0.78rem;color:var(--cream-dim);margin-bottom:16px">Sign in with your email and password.</p>
+    <input type="email" id="authEmail" placeholder="your@email.com" autocomplete="username" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.85rem;text-align:center;margin-bottom:12px;background:var(--bg);color:var(--cream)" onkeydown="if(event.key==='Enter')document.getElementById('authPassword').focus()">
+    <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.85rem;text-align:center;margin-bottom:12px;background:var(--bg);color:var(--cream)" onkeydown="if(event.key==='Enter')signIn()">
+    <button id="authBtn" onclick="signIn()" style="width:100%;padding:10px;border:none;border-radius:8px;background:var(--gold);color:white;font-family:Cinzel,serif;font-size:0.8rem;cursor:pointer;letter-spacing:1px">Sign in</button>
     <p id="authError" style="color:var(--detrimental);font-size:0.72rem;margin-top:8px;display:none"></p>
     <p style="font-size:0.6rem;color:var(--cream-dim);margin-top:20px;opacity:0.5">Built by AI with Soul - All rights reserved</p>
   </div>
@@ -233,6 +234,7 @@
 <header>
   <div class="header-row">
     <div class="logo">BICOM Optima<span>Clinical Guide & Database</span></div>
+    <button class="btn" onclick="signOut()" style="margin-left:auto">Sign out</button>
     <div class="session-bar">
       <label>Client</label><input type="text" id="clientName" placeholder="Name..." style="width:120px">
       <label>Session</label>
@@ -933,25 +935,26 @@ function handleSearch(q) {
   main.innerHTML = html;
 }
 
-// Auth - Email whitelist, instant access
-const USER_ROLES = {
-  'kelly.wotherspoon@peaceofeden.com.au': 'admin',
-  'kane@peaceofeden.com.au': 'practitioner',
-  'megsfield@gmail.com': 'viewer',
-  'leanne@milimo.com.au': 'viewer'
-};
-const ALLOWED_EMAILS = Object.keys(USER_ROLES);
+// Auth - Supabase sign-in. Access is decided by the staff_access table in the database (RLS), not by this page.
 let currentRole = 'viewer';
 let currentEmail = '';
+let accessToken = '';
+let appUnlocked = false;
 
-function checkEmail() {
+async function signIn() {
   const email = document.getElementById('authEmail').value.trim().toLowerCase();
-  if (!email) { showAuthError('Please enter your email'); return; }
-  if (!ALLOWED_EMAILS.includes(email)) { showAuthError('This email is not authorised for access'); return; }
-  localStorage.setItem('bicom_user', email);
-  currentEmail = email;
-  currentRole = USER_ROLES[email] || 'viewer';
-  unlockApp();
+  const password = document.getElementById('authPassword').value;
+  if (!email || !password) { showAuthError('Please enter your email and password'); return; }
+  const btn = document.getElementById('authBtn');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = 'Sign in';
+  if (error) { showAuthError('Email or password not recognised'); return; }
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  location.reload();
 }
 
 function showAuthError(msg) {
@@ -959,19 +962,27 @@ function showAuthError(msg) {
   el.textContent = msg; el.style.display = 'block';
 }
 
-function unlockApp() {
+async function unlockApp(session) {
+  currentEmail = (session.user.email || '').toLowerCase();
+  accessToken = session.access_token;
+  const { data: role } = await sb.rpc('staff_role', { p_tool: 'bio' });
+  if (!role) {
+    await sb.auth.signOut();
+    showAuthError('This account is not authorised for access');
+    return;
+  }
+  currentRole = role;
+  appUnlocked = true;
+  try { localStorage.removeItem('bicom_user'); } catch (e) {}
   document.getElementById('authGate').style.display = 'none';
   document.getElementById('appContainer').style.display = 'block';
   loadDB();
 }
 
-// Auto-login if previously authenticated
-const savedUser = localStorage.getItem('bicom_user');
-if (savedUser && ALLOWED_EMAILS.includes(savedUser)) {
-  currentEmail = savedUser;
-  currentRole = USER_ROLES[savedUser] || 'viewer';
-  unlockApp();
-}
+sb.auth.onAuthStateChange((event, session) => {
+  if (session) accessToken = session.access_token;
+  if (session && !appUnlocked) unlockApp(session);
+});
 
 // ============================================================
 // MY PROTOCOLS TAB (Admin + Practitioner)
@@ -1139,7 +1150,7 @@ async function saveProtocol() {
 async function approveProtocol(id) {
   await fetch(SUPABASE_URL + '/functions/v1/clinic-assistant', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
     body: JSON.stringify({ action: 'approve', protocolId: id })
   });
   const kp = await sb.from('bio_kelly_protocols').select('*').order('created_at', { ascending: false });
@@ -1155,7 +1166,7 @@ async function incorporateProtocol(id) {
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/clinic-assistant', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
       body: JSON.stringify({ action: 'incorporate', protocolId: id })
     });
     const data = await res.json();
@@ -1184,7 +1195,7 @@ async function incorporateProtocol(id) {
 async function deleteProtocol(id) {
   await fetch(SUPABASE_URL + '/functions/v1/clinic-assistant', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
     body: JSON.stringify({ action: 'delete', protocolId: id })
   });
   const kp = await sb.from('bio_kelly_protocols').select('*').order('created_at', { ascending: false });
@@ -1647,7 +1658,7 @@ async function generateTreatmentPlan() {
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/clinic-assistant', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
       body: JSON.stringify({
         action: 'treatment_plan',
         symptoms: symptoms,
@@ -1828,7 +1839,7 @@ async function aiSend() {
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/clinic-assistant', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
       body: JSON.stringify({ question: q, userEmail: currentEmail })
     });
     const data = await res.json();
