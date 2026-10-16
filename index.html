@@ -226,7 +226,9 @@
     <input type="email" id="authEmail" placeholder="your@email.com" autocomplete="username" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.85rem;text-align:center;margin-bottom:12px;background:var(--bg);color:var(--cream)" onkeydown="if(event.key==='Enter')document.getElementById('authPassword').focus()">
     <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.85rem;text-align:center;margin-bottom:12px;background:var(--bg);color:var(--cream)" onkeydown="if(event.key==='Enter')signIn()">
     <button id="authBtn" onclick="signIn()" style="width:100%;padding:10px;border:none;border-radius:8px;background:var(--gold);color:white;font-family:Cinzel,serif;font-size:0.8rem;cursor:pointer;letter-spacing:1px">Sign in</button>
+    <button id="linkBtn" onclick="sendSignInLink()" style="width:100%;padding:8px;margin-top:10px;border:1px solid var(--gold);border-radius:8px;background:transparent;color:var(--gold);font-family:inherit;font-size:0.75rem;cursor:pointer">No password? Email me a sign-in link</button>
     <p id="authError" style="color:var(--detrimental);font-size:0.72rem;margin-top:8px;display:none"></p>
+    <p id="authInfo" style="color:var(--gold);font-size:0.72rem;margin-top:8px;display:none"></p>
     <p style="font-size:0.6rem;color:var(--cream-dim);margin-top:20px;opacity:0.5">Built by AI with Soul - All rights reserved</p>
   </div>
 </div>
@@ -950,6 +952,20 @@ async function signIn() {
   const { error } = await sb.auth.signInWithPassword({ email, password });
   btn.disabled = false; btn.textContent = 'Sign in';
   if (error) { showAuthError('Email or password not recognised'); return; }
+}
+
+// Passwordless sign-in: emails a one-tap link to an existing staff account (never creates accounts).
+async function sendSignInLink() {
+  const email = document.getElementById('authEmail').value.trim().toLowerCase();
+  document.getElementById('authError').style.display = 'none';
+  if (!email) { showAuthError('Enter your email first'); return; }
+  const btn = document.getElementById('linkBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
+  btn.disabled = false; btn.textContent = 'No password? Email me a sign-in link';
+  if (error) { showAuthError('Could not send a link to that email'); return; }
+  const info = document.getElementById('authInfo');
+  info.textContent = 'Check your email and tap the link to sign in.'; info.style.display = 'block';
 }
 
 async function signOut() {
